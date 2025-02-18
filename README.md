@@ -58,8 +58,8 @@ By default, if everything is done right, Wild Commander will be loaded where you
 
 ## Usage
 Original TSConf F12 key (reset) is transferred to F11. \
-To enter BASIC press Shift+F11. \
-To enter TS-BIOS Setup Utility press Ctrl+F11. By default these setting are volatile and lost after MiST reset. To save them - open OSD menu (with F12 key) and tap "Save NVRAM settings".
+To enter BASIC press LShift+F11. \
+To enter TS-BIOS Setup Utility press RShift+F11. By default these setting are volatile and lost after MiST reset. To save them - open OSD menu (with F12 key) and tap "Save NVRAM settings".
 
 
 ## Software
