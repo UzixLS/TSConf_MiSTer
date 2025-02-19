@@ -211,8 +211,9 @@ module zmem
   wire [13:0] cpu_hi_addr = {rom_n_ram, page[7:0], za[13:9]};
   // wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v;  // debug for BM
   wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;  // asynchronous signal meaning that address requested by CPU is cached and valid
-  assign cache_hit_en = cache_hit && cache_en[win];
+  assign cache_hit_en = cache_hit && (cache_en[win] || rom_n_ram);
   wire cache_inv = cache_hit && memwr_s && ramwr_en;    // cache invalidation should be only performed if write happens to cached address
+  wire cache_inv_rst = cache_inv || rst; // rst may happen at the same time with cpu_strobe, which leads incorrect data will be written to 0h address
 
   wire [7:0] ch_addr = cpu_addr[7:0];
   // wire [14:0] cpu_hi_addr = {page[7:0], za[13:7]};
@@ -233,7 +234,7 @@ module zmem
   (
     .clock(clk),
     .address_a(ch_addr),
-    .data_a({!cache_inv, cpu_hi_addr}),
+    .data_a({!cache_inv_rst, cpu_hi_addr}),
     .wren_a(cpu_strobe || cache_inv),
     .address_b(ch_addr),
     .q_b({cache_v, cache_a})
