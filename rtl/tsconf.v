@@ -46,7 +46,7 @@ module tsconf
   input  [64:0] RTC,
   input         TAPE_IN,
   output        TAPE_OUT,
-  output        MIDI_OUT,
+  output reg    MIDI_OUT = 1'b0,
   input         UART_RX,
   output        UART_TX,
 
@@ -1049,8 +1049,19 @@ module tsconf
 
   wire [11:0] ts_l, ts_r;
   wire  [7:0] ts_do;
-  wire  [7:0] ioa_out;
-  assign MIDI_OUT = ioa_out[2];
+  wire  [7:0] ioa_0_out;
+  wire  [7:0] ioa_1_out;
+  reg ioa_0_out_2_r = 1'b0, ioa_1_out_2_r = 1'b0;
+  always @(posedge fclk) begin
+    if (ioa_0_out_2_r != ioa_0_out[2]) begin
+      ioa_0_out_2_r <= ioa_0_out[2];
+      MIDI_OUT <= ioa_0_out[2];
+    end
+    if (ioa_1_out_2_r != ioa_1_out[2]) begin
+      ioa_1_out_2_r <= ioa_1_out[2];
+      MIDI_OUT <= ioa_1_out[2];
+    end
+  end
 
   turbosound turbosound
   (
@@ -1063,7 +1074,8 @@ module tsconf
     .DO(ts_do),
     .CHANNEL_L(ts_l),
     .CHANNEL_R(ts_r),
-    .IOA_out(ioa_out)
+    .IOA_0_out(ioa_0_out),
+    .IOA_1_out(ioa_1_out)
   );
 
 

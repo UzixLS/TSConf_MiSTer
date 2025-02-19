@@ -34,12 +34,20 @@ module turbosound
 	output [11:0] CHANNEL_L, // Output channel L
 	output [11:0] CHANNEL_R, // Output channel R
 
-    input   [7:0]   IOA_in,
-    input   [7:0]   IOB_in,
-    output  [7:0]   IOA_out,
-    output  [7:0]   IOB_out,
-    output          IOA_oe,
-    output          IOB_oe
+    input   [7:0]   IOA_0_in,
+    input   [7:0]   IOB_0_in,
+    output  [7:0]   IOA_0_out,
+    output  [7:0]   IOB_0_out,
+    output          IOA_0_oe,
+    output          IOB_0_oe,
+
+    input   [7:0]   IOA_1_in,
+    input   [7:0]   IOB_1_in,
+    output  [7:0]   IOA_1_out,
+    output  [7:0]   IOB_1_out,
+    output          IOA_1_oe,
+    output          IOB_1_oe
+
 );
 
 
@@ -128,7 +136,14 @@ jt03 ym2203_0
 	.psg_B(psg_ch_b_0),
 	.psg_C(psg_ch_c_0),
 
-	.fm_snd(opn_0)
+	.fm_snd(opn_0),
+
+	.IOA_in(IOA_0_in),
+	.IOB_in(IOB_0_in),
+	.IOA_out(IOA_0_out),
+	.IOB_out(IOB_0_out),
+	.IOA_oe(IOA_0_oe),
+	.IOB_oe(IOB_0_oe)
 );
 
 wire  [7:0] psg_ch_a_1;
@@ -154,12 +169,12 @@ jt03 ym2203_1
 
 	.fm_snd(opn_1),
 
-	.IOA_in(IOA_in),
-	.IOB_in(IOB_in),
-	.IOA_out(IOA_out),
-	.IOB_out(IOB_out),
-	.IOA_oe(IOA_oe),
-	.IOB_oe(IOB_oe)
+	.IOA_in(IOA_1_in),
+	.IOB_in(IOB_1_in),
+	.IOA_out(IOA_1_out),
+	.IOB_out(IOB_1_out),
+	.IOA_oe(IOA_1_oe),
+	.IOB_oe(IOB_1_oe)
 );
 
 assign DO = ay_select ? DO_1 : DO_0;
