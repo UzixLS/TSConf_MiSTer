@@ -81,8 +81,10 @@ always @(posedge clk) begin
   if (joys[1]  != joys_r[1])  {joys_ch, joys_chn} <= {1'b1, 4'd1};
   if (joys[0]  != joys_r[0])  {joys_ch, joys_chn} <= {1'b1, 4'd0};
 
-  if (ps2_key[10] && !flg) begin
-    {strobe, press, code} <= ps2_key;
+  // MiSTer toggles ps2_key[10] on every event, both press and release.
+  if (ps2_key[10] != flg) begin
+    strobe <= 1'b1;
+    {press, code} <= ps2_key[9:0];
   end
   else if (joys_ch) begin
     joys_ch <= 1'b0;

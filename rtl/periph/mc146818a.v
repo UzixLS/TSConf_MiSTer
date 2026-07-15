@@ -74,9 +74,12 @@ end
 
 
 always @(posedge CLK) begin
+  reg rtc_strobe;
+
   KEYSCANCODE_CLR <= 1'b0;
 
-  if (RTC[62] && !b_reg[7]) begin
+  rtc_strobe <= RTC[64];
+  if (rtc_strobe != RTC[64]) begin
     seconds_reg <= RTC[7:0];
     minutes_reg <= RTC[15:8];
     hours_reg   <= RTC[23:16];

@@ -38,3 +38,5 @@ set_global_assignment -name VERILOG_FILE rtl/z80/zports.v
 set_global_assignment -name VERILOG_FILE rtl/z80/zsignals.v
 set_global_assignment -name VERILOG_FILE rtl/tsconf.v
 set_global_assignment -name SEARCH_PATH rtl/
+set_global_assignment -name SDC_FILE TSConf.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE TSConf.sv

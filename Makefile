@@ -1,23 +1,14 @@
-.PHONY: build sof2jic program_sof program_jic clean report
+.PHONY: build clean report
 
 build:
 	quartus_sh --no_banner --flow compile TSConf -c TSConf
 
-rbf2bin:
-	srec_cat output/rev_${REV}.rbf -binary -Bit_Reverse 2 -Byte_Swap 2 -o output/rev_${REV}.bin -binary
-
-program_sof:
-	quartus_pgm --no_banner --mode=jtag -o "P;output/${REVISION}.sof"
-
-program_jic:
-	quartus_pgm --no_banner --mode=jtag -o "PVBI;output/${REVISION}.jic"
-
 clean:
-	rm -rf db incremental_db output
+	rm -rf db incremental_db output_files
 
 report:
-	cat output/${REVISION}.*.smsg output/${REVISION}.*.rpt |grep -e Error -e Critical -e Warning |grep -v -e "Family doesn't support jitter analysis" -e "Force Fitter to Avoid Periphery Placement Warnings"
+	cat output_files/TSConf.*.smsg output_files/TSConf.*.rpt |grep -e Error -e Critical -e Warning |grep -v -e "Family doesn't support jitter analysis" -e "Force Fitter to Avoid Periphery Placement Warnings"
 
-export PATH:=/opt/quartus13.0sp1/quartus/bin:/cygdrive/c/Hwdev/quartus130sp1/quartus/bin:/cygdrive/c/Dev/srec/bin/:${PATH}
+export PATH:=/cygdrive/c/Hwdev/quartus170/quartus/bin64:/cygdrive/c/Dev/srec/bin/:${PATH}
 
 -include Makefile.local

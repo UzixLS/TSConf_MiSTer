@@ -1,76 +1,53 @@
-# TSConf for MiST FPGA computer
+# TSConf for MiSTer
 
-This is the port of TSConf (advanced ZX Spectrum-compatible platform) to [MiST](https://github.com/mist-devel/mist-board) and [MiST.1010](https://github.com/UzixLS/mist1010-board).
+TSConf is an advanced ZX Spectrum-compatible platform based on ZX Evolution.
+This fork contains the MiSTer port together with the later TSConf RTL fixes and
+features which were developed in the MiST version of the core.
 
-## Features of this port
-- VDAC 1
-- RTC
-- ZiFi (WiFi)
-- Tape in/out via UART_RX/UART_TX pins
-- MIDI output via UART_TX pin
-- TurboSound FM (2x YM2203)
-- General Sound 2MB
-- SAA1099
-- Covox
-- SounDrive
-- 2x Kempston/Sinclair/Cursor joystick
-- Kempston mouse
+## Features
 
-## TSConf features
-- High compatibility with original Pentagon-128 clone
-- Advanced video features:
-  - Pixel resolutions 360x288, 320x240, 320x200, 256x192
-  - Up to 720x288 Hi-res pixel resolution
-  - Hardware scrolled graphic planes
-  - 256 and 16 indexed colors per pixel
-  - Programmable color RAM with RGB555 color space and 256 cells
-  - 512 and 256 bytes per line addressing
-  - Text mode with loadable font and hardware vertical scroll
-  - Up to 256 graphic screens
-- Hardware engine for Tiles and Sprites graphics
-  - Up to 85 sprites per line
-  - Sprites sized from 8x8 to 64x64 pixels
-  - Up to 3 sprite planes
-  - Up to 2 tile planes with 8x8 pixels tiles
-  - Up to 16 palettes for sprites per line
-  - Up to 4 palettes for tiles per line for each tile plane
-- Z80 Memory addressing enhancements:
-  - Programmable RAM page for any 16kB window
-- Z80 acceleration features
-  - Selectable CPU clock 14MHz, 7MHz and 3,5MHz
-  - 512 bytes of zero-wait RAM for 14MHz
-  - On-the-fly programmable maskable interrupt position
-  - Separate IM2 vectors for different interrupt sources
-- Advanced hardware features
-  - DRAM-to-Device, Device-to-DRAM and DRAM-to-DRAM DMA Controller
+- VDAC1 video, MiSTer HDMI/scaler output and 49/60 Hz modes
+- RTC and persistent NVRAM
+- ZiFi (Wi-Fi)
+- tape input/output, MIDI output and UART through the MiSTer UART pins
+- TurboSound FM (dual YM2203), General Sound, SAA1099, Covox and Soundrive
+- two configurable Kempston/Sinclair/Cursor joysticks
+- Kempston mouse with wheel support and optional button swap
+- physical secondary SD card and MiSTer virtual VHD image
 
-See details in the official git repository: [link](https://github.com/tslabs/zx-evo/blob/master/pentevo/docs/TSconf/tsconf_en.md)
-
+The TSConf platform provides multiple video modes, tile and sprite planes,
+programmable memory paging, 3.5/7/14 MHz Z80 modes and a DMA controller. See
+the [TSConf documentation](https://github.com/tslabs/zx-evo/blob/master/pentevo/docs/TSconf/tsconf_en.md)
+for the full hardware description.
 
 ## Installation
-Place TSConf.ROM, TSConf.R01 and RBF file from [release](release/) folder into root of SD card.
 
-Also you need to place TSConf.VHD file with  Wild Commander and your games and demos. [There is](release/) example VHD to start with. \
-As alternative to VHD you can just unzip Wild Commander into root of your FAT32-formatted SD card.
+1. Copy the generated `TSConf.rbf` to the MiSTer `_Computer` directory (a dated
+   filename such as `TSConf_YYYYMMDD.rbf` may be used).
+2. Copy `release/TSConf.rom` as `games/TSConf/boot0.rom` on the MiSTer SD card.
+3. Copy `release/TSConf.r01` as `games/TSConf/boot1.rom`. MiSTer loads both ROMs
+   automatically when the core starts.
+4. Put a FAT-formatted TSConf VHD image in `games/TSConf` and mount it from the
+   core menu, or use a physical secondary SD card.
 
-By default, if everything is done right, Wild Commander will be loaded where you can choose software to start.
+The original TSConf F12 reset key is mapped to F11 because F12 opens the MiSTer
+OSD. Use Left Shift+F11 for BASIC and Right Shift+F11 for the TS-BIOS setup.
+NVRAM can be saved from the OSD and loaded again as an `.NVR` file.
 
+## Building
 
-## Usage
-Original TSConf F12 key (reset) is transferred to F11. \
-To enter BASIC press LShift+F11. \
-To enter TS-BIOS Setup Utility press RShift+F11. By default these setting are volatile and lost after MiST reset. To save them - open OSD menu (with F12 key) and tap "Save NVRAM settings".
+The project targets the MiSTer Cyclone V device and Quartus Prime Lite 17.0.
+Quartus is expected in `C:\Hwdev\quartus170`. Build from Cygwin-compatible make:
 
+```text
+C:\cygwin64\bin\make.exe build
+```
 
-## Software
-- Wild Commander: https://forum.tslabs.info/viewtopic.php?f=26&t=143
-- ZiFi: http://zifi.vtrd.in/
-- Demos and games: https://prods.tslabs.info/
-
+The resulting bitstream is written to `output_files/TSConf.rbf`.
 
 ## Credits
-- TSConf official git repository - [link](https://github.com/tslabs/zx-evo/tree/master)
-- TSConf official forum - [link](http://forum.tslabs.info/viewforum.php?f=20&sid=137db6b31f9fb533b908742c2b18284e)
-- Original TSConf port for MiSTer (on base of which this port was created) - [link](https://github.com/MiSTer-devel/TSConf_MiSTer)
-- T80 - Z80 HDL implementation
-- JT12 - Yamaha OPN HDL implementation - [link](https://github.com/jotego/jt12)
+
+- [TSConf / ZX Evolution](https://github.com/tslabs/zx-evo)
+- [original TSConf MiSTer core](https://github.com/MiSTer-devel/TSConf_MiSTer)
+- T80 Z80 HDL implementation
+- [JT12 Yamaha OPN HDL implementation](https://github.com/jotego/jt12)

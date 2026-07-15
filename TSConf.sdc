@@ -1,51 +1,61 @@
-# Clock constraints
-
-create_clock -name "CLOCK_27" -period 37.037 [get_ports {CLOCK_27}]
-create_clock -name {SPI_SCK}  -period 41.666 -waveform { 20.8 41.666 } [get_ports {SPI_SCK}]
-
-# Automatically constrain PLL and other generated clocks
-derive_pll_clocks -create_base_clocks
-
-# Automatically calculate clock uncertainty to jitter and other effects.
+derive_pll_clocks
 derive_clock_uncertainty
 
-# Clock groups
-set_clock_groups -asynchronous -group [get_clocks {SPI_SCK}] -group [get_clocks {pll|altpll_component|auto_generated|pll1|clk[*]}]
+# The TSConf core updates video data only on its pixel enable. The MiSTer
+# video pipeline samples it on the 56 MHz video clock, so this related-clock
+# crossing intentionally has more than one destination cycle to settle.
+set core_clk  [get_clocks {emu|pll|pll_inst|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk}]
+set video_clk [get_clocks {emu|pll|pll_inst|altera_pll_i|general[1].gpll~PLL_OUTPUT_COUNTER|divclk}]
+set_multicycle_path -from $core_clk -to $video_clk -setup 2
+set_multicycle_path -from $core_clk -to $video_clk -hold 1
 
-# SDRAM
-set_input_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -reference_pin [get_ports SDRAM_CLK] -max 6.4 [get_ports SDRAM_DQ[*]]
-set_input_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -reference_pin [get_ports SDRAM_CLK] -min 3.2 [get_ports SDRAM_DQ[*]]
+# CPU cores run from enables derived from the 84 MHz system clock.
+set_multicycle_path -from {emu|tsconf|CPU|*} -setup 2
+set_multicycle_path -from {emu|tsconf|CPU|*} -hold 1
+set_multicycle_path -to   {emu|tsconf|CPU|*} -setup 2
+set_multicycle_path -to   {emu|tsconf|CPU|*} -hold 1
 
-# SDRAM: max(tCMS, tAS, tDS) = 1.5ns ; max(tCMH, tAH, tDH) = 0.8ns
-set_output_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -reference_pin [get_ports SDRAM_CLK] -max 1.5 [get_ports {SDRAM_D* SDRAM_A* SDRAM_BA* SDRAM_n* SDRAM_CKE}]
-set_output_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -reference_pin [get_ports SDRAM_CLK] -min -0.8 [get_ports {SDRAM_D* SDRAM_A* SDRAM_BA* SDRAM_n* SDRAM_CKE}]
+set saa_keepers [get_keepers -no_duplicates -nowarn {*|saa1099:saa1099|*}]
+set_multicycle_path -to $saa_keepers -setup 2
+set_multicycle_path -to $saa_keepers -hold 1
 
-# SDRAM_CLK to internal memory clock
-set_multicycle_path -from [get_clocks {pll|altpll_component|auto_generated|pll1|clk[0]}] -to [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}] -setup 2
+set gs_cpu_keepers [get_keepers -no_duplicates -nowarn {*|gs_top:gs_top|gs:gs|*CPU|*}]
+set_multicycle_path -to $gs_cpu_keepers -setup 2
+set_multicycle_path -to $gs_cpu_keepers -hold 1
 
-# Some relaxed constrain to the VGA pins. The signals should arrive together, the delay is not really important.
-set_output_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}] -max 0 [get_ports {VGA_*}]
-set_output_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|clk[1]}] -min -5 [get_ports {VGA_*}]
-set_multicycle_path -to [get_ports {VGA_*}] -setup 5
-set_multicycle_path -to [get_ports {VGA_*}] -hold 4
+# Most of the TSConf logic is clocked by fclk, a clock-enable-gated version of
+# the 84 MHz system clock which advances once every three system cycles.  Keep
+# the SDRAM controller itself at one-cycle timing, but allow three cycles for
+# requests coming from the explicitly listed 28 MHz source blocks.
+set sdram_keepers [get_keepers -no_duplicates -nowarn {*|sdram:sdram|*}]
+foreach source_pattern {
+	{*|arbiter:arbiter|*}
+	{*|zmem:zmem|*}
+	{*|dma:dma|*}
+	{*|zsignals:zsignals|*}
+	{*|zports:zports|*}
+	{*|video_top:video_top|*}
+} {
+	set source_keepers [get_keepers -no_duplicates -nowarn $source_pattern]
+	set_multicycle_path -from $source_keepers -to $sdram_keepers -setup 3
+	set_multicycle_path -from $source_keepers -to $sdram_keepers -hold 2
+}
 
-# Some relaxed constrain for DAC, which is feed by 28 MHz derived clock
-set_multicycle_path -to {dac|*} -setup 3
-set_multicycle_path -to {dac|*} -hold 2
-set_false_path -to [get_ports {AUDIO_L}]
-set_false_path -to [get_ports {AUDIO_R}]
+# The SPI engine is in the same 28 MHz domain while the MiSTer virtual SD
+# bridge is clocked directly at 84 MHz.
+set spi_keepers     [get_keepers -no_duplicates -nowarn {*|spi:spi|*}]
+set sdcard_keepers  [get_keepers -no_duplicates -nowarn {*|sd_card:sd_card|*}]
+set_multicycle_path -from $spi_keepers -to $sdcard_keepers -setup 3
+set_multicycle_path -from $spi_keepers -to $sdcard_keepers -hold 2
 
-set_false_path -to [get_ports {LED}]
-set_false_path -to [get_ports {UART_TX}]
-set_false_path -from [get_ports {UART_RX}]
-
-set_multicycle_path -from {tsconf|CPU|*} -setup 2
-set_multicycle_path -from {tsconf|CPU|*} -hold 1
-set_multicycle_path -to {tsconf|CPU|*} -setup 2
-set_multicycle_path -to {tsconf|CPU|*} -hold 1
-
-set_multicycle_path -to {tsconf|saa1099|*} -setup 2
-set_multicycle_path -to {tsconf|saa1099|*} -hold 1
-
-set_multicycle_path -to {tsconf|gs_top|gs|CPU|*} -setup 2
-set_multicycle_path -to {tsconf|gs_top|gs|CPU|*} -hold 1
+# RTC runs at 84 MHz but its bus controls originate in the 28 MHz CPU domain.
+set rtc_keepers [get_keepers -no_duplicates -nowarn {*|mc146818a:mc146818a|*}]
+foreach source_pattern {
+	{*|zports:zports|*}
+	{*|zmem:zmem|*}
+	{*|zsignals:zsignals|*}
+} {
+	set source_keepers [get_keepers -no_duplicates -nowarn $source_pattern]
+	set_multicycle_path -from $source_keepers -to $rtc_keepers -setup 3
+	set_multicycle_path -from $source_keepers -to $rtc_keepers -hold 2
+}

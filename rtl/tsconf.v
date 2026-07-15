@@ -29,6 +29,9 @@ module tsconf
   output  [7:0] VBLU,
   output        VHSYNC,
   output        VVSYNC,
+  output        VGA_HBLANK,
+  output        VGA_VBLANK,
+  output        VGA_CEPIX,
 
   // SD/MMC Memory Card
   input         SD_SO,
@@ -548,6 +551,9 @@ module tsconf
 `endif
     .hsync(VHSYNC),
     .vsync(VVSYNC),
+    .hblank(VGA_HBLANK),
+    .vblank(VGA_VBLANK),
+    .pix_stb(VGA_CEPIX),
     .csync(),
     .cfg_60hz(cfg_60hz),
     .vga_on(cfg_vga_on),

@@ -29,6 +29,9 @@ module video_top
   output wire hsync,
   output wire vsync,
   output wire csync,
+  output wire hblank,
+  output wire vblank,
+  output wire pix_stb,
 
   // Z80 controls
   input wire [ 7:0] d,
@@ -156,7 +159,6 @@ module video_top
   wire hvtspix;
   wire frame;
   wire flash;
-  wire pix_stb;
 
   // fetcher
   wire [31:0] fetch_data;
@@ -326,6 +328,8 @@ module video_top
     .csync          (csync),
     .tv_blank       (tv_blank),
     .vga_blank      (vga_blank),
+    .tv_hblank      (hblank),
+    .tv_vblank      (vblank),
     .vga_cnt_in     (vga_cnt_in),
     .vga_cnt_out    (vga_cnt_out),
     .ts_raddr       (ts_raddr),

@@ -210,7 +210,7 @@ assign SDRAM_DQMH = SDRAM_A[12];
 altddio_out
 #(
     .extend_oe_disable("OFF"),
-    .intended_device_family("Cyclone III"),
+    .intended_device_family("Cyclone V"),
     .invert_output("OFF"),
     .lpm_hint("UNUSED"),
     .lpm_type("altddio_out"),
