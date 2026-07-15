@@ -10,7 +10,7 @@ features which were developed in the MiST version of the core.
 - RTC and persistent NVRAM
 - ZiFi (Wi-Fi)
 - tape input, MIDI output and UART through the MiSTer UART pins
-- TurboSound FM (dual YM2203), General Sound, SAA1099, Covox and Soundrive
+- TurboSound FM (dual YM2203), OPL2 (YM3812), General Sound, SAA1099, Covox and Soundrive
 - two configurable Kempston/Sinclair/Cursor joysticks
 - Kempston mouse with wheel support and optional button swap
 - physical secondary SD card and MiSTer virtual VHD image
@@ -51,3 +51,4 @@ The resulting bitstream is written to `output_files/TSConf.rbf`.
 - [original TSConf MiSTer core](https://github.com/MiSTer-devel/TSConf_MiSTer)
 - T80 Z80 HDL implementation
 - [JT12 Yamaha OPN HDL implementation](https://github.com/jotego/jt12)
+- [JTOPL Yamaha OPL HDL implementation](https://github.com/jotego/jtopl)

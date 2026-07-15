@@ -1160,13 +1160,33 @@ module tsconf
   );
 
 
+  // OPL ports #C4 (address/status) and #C5 (data)
+  wire        opl_enable = iorq && (a[7:1] == 7'b1100010);
+  wire  [7:0] opl_do;
+  wire signed [15:0] opl_l;
+  wire signed [15:0] opl_r;
+
+  opl opl
+  (
+    .reset(rst),
+    .clk(fclk),
+    .wr_n(wr_n),
+    .cs_n(~opl_enable),
+    .din(d),
+    .a(a[0]),
+    .dout(opl_do),
+    .out_l(opl_l),
+    .out_r(opl_r)
+  );
+
+
   // Beeper
   reg [7:0] port_xxfe_reg;
   always @(posedge fclk) if (beeper_wr) port_xxfe_reg <= d;
 
   // Audio output
-  wire [11:0] audio_l = ts_l + {gs_l[14], gs_l[14:4]} + {2'b00, covox_a, 2'b00} + {2'b00, covox_b, 2'b00} + {1'b0, saa_out_l, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};
-  wire [11:0] audio_r = ts_r + {gs_r[14], gs_r[14:4]} + {2'b00, covox_c, 2'b00} + {2'b00, covox_d, 2'b00} + {1'b0, saa_out_r, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};
+  wire [11:0] audio_l = ts_l + {gs_l[14], gs_l[14:4]} + {2'b00, covox_a, 2'b00} + {2'b00, covox_b, 2'b00} + {1'b0, saa_out_l, 3'b000} + opl_l[15:4] + {3'b000, port_xxfe_reg[4], 8'b00000000};
+  wire [11:0] audio_r = ts_r + {gs_r[14], gs_r[14:4]} + {2'b00, covox_c, 2'b00} + {2'b00, covox_d, 2'b00} + {1'b0, saa_out_r, 3'b000} + opl_r[15:4] + {3'b000, port_xxfe_reg[4], 8'b00000000};
 
   compressor compressor
   (
@@ -1181,6 +1201,7 @@ module tsconf
       (~mreq_n && ~rd_n)                  ? dout_ram      : // SDRAM
       (gs_sel && ~rd_n)                   ? gs_do_bus     : // General Sound
       (ts_enable && ~rd_n)                ? ts_do         : // TurboSound
+      (opl_enable && ~rd_n)               ? opl_do        : // OPL status
       (zifi_dataout && ~rd_n)             ? zifi_do       : // ZiFi
       (ena_ports)                         ? dout_ports    :
       (intack)                            ? im2vect       :
