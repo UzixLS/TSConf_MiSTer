@@ -216,7 +216,20 @@ assign SDRAM2_nWE  = 1'b1;
 localparam CONF_STR = {
 	"TSConf;;",
 	"SC0,VHD,Mount virtual SD;",
-	"F3F,NVR,Load NVRAM;",
+	"P1,NVRAM;",
+	"P1o56,CPU Speed (MHz),3.5,7,14;",
+	"P1o7,CPU Cache,ON,OFF;",
+	"P1o89,#7FFD span,128K,128K Auto,1024K,512K;",
+	"P1oAC,Reset to,BD boot.$C,BD sys.rom,ROM #00,ROM #04,RAM #F8;",
+	"P1oDE,Reset bank,TR-DOS,Basic 48,Basic 128,SYS;",
+	"P1oFH,CS Reset to,BD boot.$C,BD sys.rom,ROM #00,ROM #04,RAM #F8;",
+	"P1oIJ,CS Reset bank,TR-DOS,Basic 48,Basic 128,SYS;",
+	"P1oKM,Boot Device,SD Z-controller,IDE Nemo Master,IDE Nemo Slave,RS-232,IDE Smuc Master,IDE Smuc Slave,SD2 Z-controller;",
+	"P1oNP,ZX Palette,Default,B.black,Light,Pale,Dark,Grayscale,Custom;",
+	"P1oQ,NGS Reset,OFF,ON;",
+	"P1oR,FT8xx Reset,OFF,ON;",
+	"P1oSU,INT Offset,1,2,3,4,5,6,7,0;",
+	"P1T0,Apply and reset;",
 	"-;",
 	"o01,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O12,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -230,7 +243,6 @@ localparam CONF_STR = {
 	"OC,Vsync,49 Hz,60 Hz;",
 	"OD,VDAC1,ON,OFF;",
 	"OE,CPU Type,CMOS,NMOS;",
-	"TF,Save NVRAM settings;",
 	"T0,Reset;",
 	"J,Fire 1,Fire 2;",
 	"V,v",`BUILD_DATE
@@ -308,9 +320,7 @@ wire [64:0] RTC;
 wire ioctl_wr;
 wire [26:0] ioctl_addr;
 wire [7:0] ioctl_dout;
-wire [7:0] ioctl_din;
 wire ioctl_download;
-wire ioctl_upload;
 wire [15:0] ioctl_index;
 
 hps_io #(.CONF_STR(CONF_STR)) hps_io
@@ -347,10 +357,6 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
 	.ioctl_download(ioctl_download),
-	.ioctl_upload(ioctl_upload),
-	.ioctl_upload_req(status[15]),
-	.ioctl_upload_index(8'h3F),
-	.ioctl_din(ioctl_din),
 	.ioctl_index(ioctl_index),
 	.ioctl_wait(1'b0)
 );
@@ -361,6 +367,149 @@ wire [28:0] core_mouse = {
 	ps2_mouse[24], ps2_mouse_ext[3:0], ps2_mouse[23:8],
 	ps2_mouse[7:2], mouse_b1, mouse_b0
 };
+
+//////////////////    NVRAM    ///////////////////
+// NVRAM settings mirror the BIOS table at CMOS addresses B1-BC. The options
+// whose BIOS defaults aren't zero are reordered in the OSD and converted back
+// to the values expected by ts-bios.asm.
+wire [25:0] nvram_cfg = status[62:37];
+
+function automatic [2:0] nvram_boot_target;
+	input [2:0] option;
+	begin
+		case(option)
+			3'd0: nvram_boot_target = 3'd3; // BD boot.$C
+			3'd1: nvram_boot_target = 3'd4; // BD sys.rom
+			3'd2: nvram_boot_target = 3'd0; // ROM #00
+			3'd3: nvram_boot_target = 3'd1; // ROM #04
+			default: nvram_boot_target = 3'd2; // RAM #F8
+		endcase
+	end
+endfunction
+
+function automatic [7:0] nvram_cfg_value;
+	input [7:0] address;
+	input [25:0] cfg;
+	begin
+		case(address)
+			8'hB1: nvram_cfg_value = {6'd0, cfg[1:0]};
+			8'hB2: nvram_cfg_value = {5'd0, cfg[17:15]};
+			8'hB3: nvram_cfg_value = {7'd0, ~cfg[2]};
+			8'hB4: nvram_cfg_value = {5'd0, nvram_boot_target(cfg[7:5])};
+			8'hB5: nvram_cfg_value = {6'd0, cfg[9:8]};
+			8'hB6: nvram_cfg_value = {5'd0, nvram_boot_target(cfg[12:10])};
+			8'hB7: nvram_cfg_value = {6'd0, cfg[14:13]};
+			8'hB8: nvram_cfg_value = {6'd0, cfg[4:3] + 2'd1};
+			8'hB9: nvram_cfg_value = {5'd0, cfg[20:18]};
+			8'hBA: nvram_cfg_value = {7'd0, cfg[21]};
+			8'hBB: nvram_cfg_value = {7'd0, cfg[22]};
+			8'hBC: nvram_cfg_value = {5'd0, cfg[25:23] + 3'd1};
+			default: nvram_cfg_value = 8'd0;
+		endcase
+	end
+endfunction
+
+function automatic nvram_cfg_address;
+	input [7:0] address;
+	begin
+		nvram_cfg_address = (address >= 8'hB1) && (address <= 8'hBC);
+	end
+endfunction
+
+wire [7:0] nvram_data_out;
+
+localparam [2:0] NVRAM_IDLE     = 3'd0;
+localparam [2:0] NVRAM_ADDRESS  = 3'd1;
+localparam [2:0] NVRAM_DATA     = 3'd2;
+localparam [2:0] NVRAM_CRC_BITS = 3'd3;
+localparam [2:0] NVRAM_CRC_LOW  = 3'd4;
+localparam [2:0] NVRAM_CRC_HIGH = 3'd5;
+
+reg [2:0] nvram_state = NVRAM_IDLE;
+reg [7:0] nvram_address = 8'hB1;
+reg [15:0] nvram_crc = 16'hFFFF;
+reg [2:0] nvram_crc_bit;
+reg [25:0] nvram_cfg_latched;
+reg nvram_boot_pending = 1'b1;
+reg old_status_reset = 1'b0;
+reg [23:0] nvram_boot_delay = 24'd0;
+reg [25:0] nvram_cfg_seen = 26'd0;
+
+wire nvram_update_active = nvram_state != NVRAM_IDLE;
+wire nvram_boot_ready = &nvram_boot_delay;
+wire nvram_address_is_cfg = nvram_cfg_address(nvram_address);
+wire [7:0] nvram_config_data = nvram_cfg_value(nvram_address, nvram_cfg_latched);
+wire [7:0] nvram_crc_data = nvram_address_is_cfg ? nvram_config_data : nvram_data_out;
+wire nvram_cmos_wr = ((nvram_state == NVRAM_DATA) && nvram_address_is_cfg) ||
+	(nvram_state == NVRAM_CRC_LOW) || (nvram_state == NVRAM_CRC_HIGH);
+wire [7:0] nvram_cmos_data = (nvram_state == NVRAM_CRC_LOW) ? nvram_crc[7:0] :
+	(nvram_state == NVRAM_CRC_HIGH) ? nvram_crc[15:8] : nvram_config_data;
+
+// BIOS calculates CRC over B1-E5 (B0/FDDVirt is intentionally excluded) and
+// stores it little-endian at E6-E7. Keep the core in reset while updating so
+// BIOS never observes a partially written configuration.
+always @(posedge clk_sys) begin
+	old_status_reset <= status[0];
+
+	// hps_io is external code and doesn't expose a status-ready handshake. Wait
+	// until HPS downloads are done and the NVRAM status bits have been stable for
+	// about 200 ms before allowing the first BIOS start.
+	if(nvram_boot_pending && (nvram_state == NVRAM_IDLE)) begin
+		if(RESET || ioctl_download || (nvram_cfg_seen != nvram_cfg)) begin
+			nvram_cfg_seen <= nvram_cfg;
+			nvram_boot_delay <= 24'd0;
+		end
+		else if(!nvram_boot_ready) nvram_boot_delay <= nvram_boot_delay + 1'd1;
+	end
+
+	case(nvram_state)
+		NVRAM_IDLE: begin
+			if((nvram_boot_pending && nvram_boot_ready && !RESET && !ioctl_download) ||
+				(!nvram_boot_pending && !old_status_reset && status[0])) begin
+				nvram_cfg_latched <= nvram_cfg;
+				nvram_address <= 8'hB1;
+				nvram_crc <= 16'hFFFF;
+				nvram_state <= NVRAM_ADDRESS;
+			end
+		end
+
+		NVRAM_ADDRESS: nvram_state <= NVRAM_DATA;
+
+		NVRAM_DATA: begin
+			nvram_crc <= nvram_crc ^ {nvram_crc_data, 8'd0};
+			nvram_crc_bit <= 3'd0;
+			nvram_state <= NVRAM_CRC_BITS;
+		end
+
+		NVRAM_CRC_BITS: begin
+			nvram_crc <= nvram_crc[15] ?
+				({nvram_crc[14:0], 1'b0} ^ 16'h1021) : {nvram_crc[14:0], 1'b0};
+			if(nvram_crc_bit == 3'd7) begin
+				if(nvram_address == 8'hE5) begin
+					nvram_address <= 8'hE6;
+					nvram_state <= NVRAM_CRC_LOW;
+				end
+				else begin
+					nvram_address <= nvram_address + 1'd1;
+					nvram_state <= NVRAM_ADDRESS;
+				end
+			end
+			else nvram_crc_bit <= nvram_crc_bit + 1'd1;
+		end
+
+		NVRAM_CRC_LOW: begin
+			nvram_address <= 8'hE7;
+			nvram_state <= NVRAM_CRC_HIGH;
+		end
+
+		NVRAM_CRC_HIGH: begin
+			nvram_boot_pending <= 1'b0;
+			nvram_state <= NVRAM_IDLE;
+		end
+
+		default: nvram_state <= NVRAM_IDLE;
+	endcase
+end
 
 ////////////////////  MAIN  //////////////////////
 wire [7:0] R,G,B;
@@ -404,7 +553,7 @@ tsconf tsconf
 	.SOUND_L(sound_l),
 	.SOUND_R(sound_r),
 
-	.COLD_RESET(RESET | status[0] | reset_img | ioctl_download),
+	.COLD_RESET(RESET | status[0] | reset_img | ioctl_download | nvram_boot_pending | nvram_update_active),
 	.WARM_RESET(buttons[1]),
 	.RTC(RTC),
 	.TAPE_IN(UART_RXD),
@@ -428,11 +577,14 @@ tsconf tsconf
 	.loader_act(ioctl_download),
 	.loader_addr(ioctl_addr[15:0]),
 	.loader_do(ioctl_dout),
-	.loader_di(ioctl_din),
 	.loader_wr(ioctl_wr),
 	.loader_cs_rom_main(ioctl_index == 16'h0000),
 	.loader_cs_rom_gs(ioctl_index == 16'h0040),
-	.loader_cs_cmos(ioctl_index == 16'h003F)
+
+	.cmos_addr(nvram_address),
+	.cmos_do(nvram_cmos_data),
+	.cmos_di(nvram_data_out),
+	.cmos_wr(nvram_cmos_wr)
 );
 
 assign AUDIO_L = sound_l;
@@ -468,7 +620,7 @@ assign DDRAM_DIN      = 0;
 assign DDRAM_BE       = 0;
 assign DDRAM_WE       = 0;
 
-assign LED_USER = (vsd_sel & sd_act) | ioctl_download | ioctl_upload;
+assign LED_USER = (vsd_sel & sd_act) | ioctl_download;
 assign LED_DISK = {1'b1, ~vsd_sel & sd_act};
 
 //////////////////   VIDEO   ///////////////////

@@ -70,11 +70,14 @@ module tsconf
   input         loader_act,
   input  [15:0] loader_addr,
   input   [7:0] loader_do,
-  output  [7:0] loader_di,
   input         loader_wr,
   input         loader_cs_rom_main,
   input         loader_cs_rom_gs,
-  input         loader_cs_cmos
+
+  input   [7:0] cmos_addr,
+  input   [7:0] cmos_do,
+  output  [7:0] cmos_di,
+  input         cmos_wr
 );
 
   wire f0, f1, h0, h1, c0, c1, c2, c3;
@@ -991,10 +994,10 @@ module tsconf
     .A(wait_addr),
     .DI(d),
     .DO(wait_read),
-    .loader_WR(loader_wr && loader_cs_cmos),
-    .loader_A(loader_addr[7:0]),
-    .loader_DI(loader_do),
-    .loader_DO(loader_di)
+    .loader_WR(cmos_wr),
+    .loader_A(cmos_addr),
+    .loader_DI(cmos_do),
+    .loader_DO(cmos_di)
   );
 
 
