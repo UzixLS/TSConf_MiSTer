@@ -15,7 +15,7 @@
 
 `define XTR_FEAT        // extra features, in only IDEless version
 
-// `define SD_CARD2        // for second SD Card
+`define SD_CARD2        // for second SD Card
 
 // `define AUTO_INT     // auto-incremented Frame Interrpt
 

@@ -404,6 +404,7 @@ tsconf tsconf
 	.SD_SI(sdmosi),
 	.SD_CLK(sdclk),
 	.SD_CS_N(sdss),
+	.SD_CS2_N(sdss2),
 
 	.SOUND_L(sound_l),
 	.SOUND_R(sound_r),
@@ -503,8 +504,7 @@ video_mixer #(.GAMMA(1)) video_mixer
 //////////////////   SD   ///////////////////
 wire sdclk;
 wire sdmosi;
-wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
-wire sdss;
+wire sdss, sdss2;
 
 reg reset_img;
 reg vsd_sel = 0;
@@ -521,6 +521,10 @@ always @(posedge clk_sys) begin
 end
 
 wire vsdmiso;
+wire sdmiso = !vsd_sel ? SD_MISO :
+	!sdss  ? vsdmiso :
+	!sdss2 ? SD_MISO : 1'b1;
+
 sd_card sd_card
 (
 	.*,
@@ -533,7 +537,7 @@ sd_card sd_card
 	.miso(vsdmiso)
 );
 
-assign SD_CS = vsd_sel | sdss;
+assign SD_CS = vsd_sel ? sdss2 : sdss;
 assign SD_SCK = sdclk & ~SD_CS;
 assign SD_MOSI = sdmosi & ~SD_CS;
 

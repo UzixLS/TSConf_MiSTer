@@ -38,6 +38,9 @@ module tsconf
   output        SD_SI,
   output        SD_CLK,
   output        SD_CS_N,
+`ifdef SD_CARD2
+  output        SD_CS2_N,
+`endif
 
   // Audio
   output [15:0] SOUND_L,
