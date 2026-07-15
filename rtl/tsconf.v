@@ -48,7 +48,6 @@ module tsconf
   input         WARM_RESET,
   input  [64:0] RTC,
   input         TAPE_IN,
-  output        TAPE_OUT,
   output reg    MIDI_OUT = 1'b0,
   input         UART_RX,
   output        UART_TX,
@@ -1158,10 +1157,9 @@ module tsconf
   );
 
 
-  // Beeper and Tape out
+  // Beeper
   reg [7:0] port_xxfe_reg;
   always @(posedge fclk) if (beeper_wr) port_xxfe_reg <= d;
-  assign TAPE_OUT = port_xxfe_reg[3];
 
   // Audio output
   wire [11:0] audio_l = ts_l + {gs_l[14], gs_l[14:4]} + {2'b00, covox_a, 2'b00} + {2'b00, covox_b, 2'b00} + {1'b0, saa_out_l, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};

@@ -214,7 +214,8 @@ assign SDRAM2_nWE  = 1'b1;
 
 `include "build_id.v"
 localparam CONF_STR = {
-	"TSConf;;",
+	"TSConf;",
+	"UART115200,MIDI;",
 	"SC0,VHD,Mount virtual SD;",
 	"P1,NVRAM;",
 	"P1o56,CPU Speed (MHz),3.5,7,14;",
@@ -298,6 +299,7 @@ end
 wire [31:0] joy_0;
 wire [31:0] joy_1;
 wire [1:0] buttons;
+wire [7:0] uart_mode;
 wire [24:0] ps2_mouse;
 wire [15:0] ps2_mouse_ext;
 wire [10:0] ps2_key;
@@ -332,6 +334,7 @@ hps_io #(.CONF_STR(CONF_STR)) hps_io
 	.joystick_1(joy_1),
 	.buttons(buttons),
 	.status(status),
+	.uart_mode(uart_mode),
 	.status_menumask({15'd0,en270p}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
@@ -517,7 +520,7 @@ wire HBlank,VBlank;
 wire VS,HS;
 wire ce_vid;
 wire [15:0] sound_l,sound_r;
-wire tape_out,midi_out,uart_out;
+wire midi_out,uart_out;
 
 tsconf tsconf
 (
@@ -557,7 +560,6 @@ tsconf tsconf
 	.WARM_RESET(buttons[1]),
 	.RTC(RTC),
 	.TAPE_IN(UART_RXD),
-	.TAPE_OUT(tape_out),
 	.MIDI_OUT(midi_out),
 	.UART_RX(UART_RXD),
 	.UART_TX(uart_out),
@@ -592,25 +594,8 @@ assign AUDIO_R = sound_r;
 assign AUDIO_S = 1'b1;
 assign AUDIO_MIX = status[4:3];
 
-reg uart_tx = 1'b1;
-reg tape_out_old = 1'b0;
-reg midi_out_old = 1'b0;
-reg uart_out_old = 1'b0;
-always @(posedge clk_sys) begin
-	if(tape_out_old != tape_out) begin
-		tape_out_old <= tape_out;
-		uart_tx <= tape_out;
-	end
-	if(midi_out_old != midi_out) begin
-		midi_out_old <= midi_out;
-		uart_tx <= midi_out;
-	end
-	if(uart_out_old != uart_out) begin
-		uart_out_old <= uart_out;
-		uart_tx <= uart_out;
-	end
-end
-assign UART_TXD = uart_tx;
+assign UART_TXD = (uart_mode == 3) ? midi_out :
+	                  (uart_mode == 1 || uart_mode == 2) ? uart_out : 1'b1;
 
 assign DDRAM_CLK      = clk_sys;
 assign DDRAM_BURSTCNT = 0;

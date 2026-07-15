@@ -9,7 +9,7 @@ features which were developed in the MiST version of the core.
 - VDAC1 video, MiSTer HDMI/scaler output and 49/60 Hz modes
 - RTC and persistent NVRAM
 - ZiFi (Wi-Fi)
-- tape input/output, MIDI output and UART through the MiSTer UART pins
+- tape input, MIDI output and UART through the MiSTer UART pins
 - TurboSound FM (dual YM2203), General Sound, SAA1099, Covox and Soundrive
 - two configurable Kempston/Sinclair/Cursor joysticks
 - Kempston mouse with wheel support and optional button swap
