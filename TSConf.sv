@@ -69,6 +69,21 @@ localparam CONF_STR = {
 	"TSConf;",
 	"UART115200,MIDI;",
 	"SC0,VHD,Mount virtual SD;",
+	"-;",
+	"O78,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor;",
+	"O9A,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor;",
+	"OB,Swap mouse buttons,OFF,ON;",
+	"-;",
+	"P2,Video;",
+	"P2o01,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
+	"P2O12,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
+	"d0P2o2,Vertical Crop,Disabled,270p(5x);",
+	"P2o34,Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
+	"P2-;",
+	"P2OC,Vsync,48.8 Hz,60 Hz;",
+	"P2OD,VDAC1,ON,OFF;",
+	"O34,Stereo mix,None,25%,50%,100%;",
+	"OE,CPU Type,CMOS,NMOS;",
 	"P1,NVRAM;",
 	"P1o56,CPU Speed (MHz),3.5,7,14;",
 	"P1o7,CPU Cache,ON,OFF;",
@@ -84,18 +99,6 @@ localparam CONF_STR = {
 	"P1oSU,INT Offset,1,2,3,4,5,6,7,0;",
 	"P1T0,Apply and reset;",
 	"-;",
-	"o01,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
-	"O12,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
-	"d0o2,Vertical Crop,Disabled,270p(5x);",
-	"o34,Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
-	"-;",
-	"O34,Stereo mix,None,25%,50%,100%;",
-	"O78,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor;",
-	"O9A,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor;",
-	"OB,Swap mouse buttons,OFF,ON;",
-	"OC,Vsync,49 Hz,60 Hz;",
-	"OD,VDAC1,ON,OFF;",
-	"OE,CPU Type,CMOS,NMOS;",
 	"T0,Reset;",
 	"J,Fire 1,Fire 2;",
 	"V,v",`BUILD_DATE
@@ -264,13 +267,6 @@ function automatic [7:0] nvram_cfg_value;
 	end
 endfunction
 
-function automatic nvram_cfg_address;
-	input [7:0] address;
-	begin
-		nvram_cfg_address = (address >= 8'hB1) && (address <= 8'hBC);
-	end
-endfunction
-
 wire [7:0] nvram_data_out;
 
 localparam [2:0] NVRAM_IDLE     = 3'd0;
@@ -292,7 +288,7 @@ reg [25:0] nvram_cfg_seen = 26'd0;
 
 wire nvram_update_active = nvram_state != NVRAM_IDLE;
 wire nvram_boot_ready = &nvram_boot_delay;
-wire nvram_address_is_cfg = nvram_cfg_address(nvram_address);
+wire nvram_address_is_cfg = (nvram_address >= 8'hB1) && (nvram_address <= 8'hBC);
 wire [7:0] nvram_config_data = nvram_cfg_value(nvram_address, nvram_cfg_latched);
 wire [7:0] nvram_crc_data = nvram_address_is_cfg ? nvram_config_data : nvram_data_out;
 wire nvram_cmos_wr = ((nvram_state == NVRAM_DATA) && nvram_address_is_cfg) ||
