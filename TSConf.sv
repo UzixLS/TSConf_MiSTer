@@ -100,7 +100,9 @@ localparam CONF_STR = {
 	"P1T0,Apply and reset;",
 	"-;",
 	"T0,Reset;",
-	"J,Fire 1,Fire 2;",
+	"J,Fire 1,Fire 2,Fire 3,Fire 4;",
+	"jn,A,B,X,Y;",
+	"jp,B,A,Y,X;",
 	"V,v",`BUILD_DATE
 };
 
@@ -422,8 +424,8 @@ tsconf tsconf
 
 	.PS2_KEY(ps2_key),
 	.PS2_MOUSE(core_mouse),
-	.JOYSTICK1({joy_0[9:8],joy_0[5:0]}),
-	.JOYSTICK2({joy_1[9:8],joy_1[5:0]}),
+	.JOYSTICK1(joy_0[7:0]),
+	.JOYSTICK2(joy_1[7:0]),
 
 	.loader_act(ioctl_download),
 	.loader_addr(ioctl_addr[15:0]),
