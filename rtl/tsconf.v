@@ -62,6 +62,7 @@ module tsconf
   input         CFG_VDAC,
   input   [2:0] CFG_JOYSTICK1,
   input   [2:0] CFG_JOYSTICK2,
+  input         CFG_TURBOSOUND_ACB,
 
   // User input
   input  [10:0] PS2_KEY,
@@ -1085,6 +1086,7 @@ module tsconf
     .DO(ts_do),
     .CHANNEL_L(ts_l),
     .CHANNEL_R(ts_r),
+    .ACB(CFG_TURBOSOUND_ACB),
     .IOA_0_out(ioa_0_out),
     .IOA_1_out(ioa_1_out)
   );

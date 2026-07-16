@@ -83,6 +83,7 @@ localparam CONF_STR = {
 	"P2OC,Vsync,48.8 Hz,60 Hz;",
 	"P2OD,VDAC1,ON,OFF;",
 	"O34,Stereo mix,None,25%,50%,100%;",
+	"O5,PSG panning,ABC,ACB;",
 	"OE,CPU Type,CMOS,NMOS;",
 	"P1,NVRAM;",
 	"P1o56,CPU Speed (MHz),3.5,7,14;",
@@ -114,6 +115,7 @@ wire cfg_mouse_swap = status[11];
 wire cfg_60hz = ~status[12];
 wire cfg_vdac = ~status[13];
 wire cfg_out0 = ~status[14];
+wire cfg_turbosound_acb = status[5];
 
 wire [1:0] ar = status[33:32];
 wire vcrop_en = status[34];
@@ -421,6 +423,7 @@ tsconf tsconf
 	.CFG_VDAC(cfg_vdac),
 	.CFG_JOYSTICK1(cfg_joystick1),
 	.CFG_JOYSTICK2(cfg_joystick2),
+	.CFG_TURBOSOUND_ACB(cfg_turbosound_acb),
 
 	.PS2_KEY(ps2_key),
 	.PS2_MOUSE(core_mouse),

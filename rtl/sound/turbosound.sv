@@ -33,6 +33,7 @@ module turbosound
 
 	output [11:0] CHANNEL_L, // Output channel L
 	output [11:0] CHANNEL_R, // Output channel R
+	input         ACB,       // PSG channel layout: 0 = ABC, 1 = ACB
 
     input   [7:0]   IOA_0_in,
     input   [7:0]   IOB_0_in,
@@ -188,8 +189,8 @@ always @(posedge CLK) begin
 	psg_b <= { 1'b0, psg_ch_b_1 } + { 1'b0, psg_ch_b_0 };
 	psg_c <= { 1'b0, psg_ch_c_1 } + { 1'b0, psg_ch_c_0 };
 
-	psg_l <= { 2'b00, psg_a, 1'd0 } + { 3'b000, psg_b };
-	psg_r <= { 2'b00, psg_c, 1'd0 } + { 3'b000, psg_b };
+	psg_l <= { 2'b00, psg_a, 1'd0 } + { 3'b000, ACB ? psg_c : psg_b };
+	psg_r <= { 2'b00, ACB ? psg_b : psg_c, 1'd0 } + { 3'b000, ACB ? psg_c : psg_b };
 	opn_s <= {{2{opn_0[15]}}, opn_0[15:6]} + {{2{opn_1[15]}}, opn_1[15:6]};
 
 	ch_l <= fm_ena ? $signed(opn_s) + $signed(psg_l) : $signed(psg_l);
