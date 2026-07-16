@@ -11,7 +11,7 @@ features which were developed in the MiST version of the core.
 - ZiFi (Wi-Fi)
 - tape input, MIDI output and UART through the MiSTer UART pins
 - TurboSound FM (dual YM2203), OPL2 (YM3812), General Sound, SAA1099, Covox and Soundrive
-- two configurable Kempston/Sinclair/Cursor joysticks
+- two configurable Kempston/Sinclair/Cursor/QAOPM joysticks
 - Kempston mouse with wheel support and optional button swap
 - physical secondary SD card and MiSTer virtual VHD image
 

@@ -70,8 +70,8 @@ localparam CONF_STR = {
 	"UART115200,MIDI;",
 	"SC0,VHD,Mount virtual SD;",
 	"-;",
-	"O78,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor;",
-	"O9A,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor;",
+	"OFH,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor,QAOPM;",
+	"OIK,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor,QAOPM;",
 	"OB,Swap mouse buttons,OFF,ON;",
 	"-;",
 	"P2,Video;",
@@ -108,8 +108,8 @@ localparam CONF_STR = {
 
 wire [127:0] status;
 wire [1:0] scale = status[2:1];
-wire [1:0] cfg_joystick1 = status[8:7];
-wire [1:0] cfg_joystick2 = status[10:9];
+wire [2:0] cfg_joystick1 = status[17:15];
+wire [2:0] cfg_joystick2 = status[20:18];
 wire cfg_mouse_swap = status[11];
 wire cfg_60hz = ~status[12];
 wire cfg_vdac = ~status[13];

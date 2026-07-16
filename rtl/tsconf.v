@@ -60,8 +60,8 @@ module tsconf
   input         CFG_60HZ,
   input         CFG_SCANDOUBLER,
   input         CFG_VDAC,
-  input   [2:1] CFG_JOYSTICK1,
-  input   [2:1] CFG_JOYSTICK2,
+  input   [2:0] CFG_JOYSTICK1,
+  input   [2:0] CFG_JOYSTICK2,
 
   // User input
   input  [10:0] PS2_KEY,
