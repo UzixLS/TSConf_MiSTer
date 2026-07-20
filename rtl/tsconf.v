@@ -1162,23 +1162,26 @@ module tsconf
   );
 
 
-  // OPL ports #C4 (address/status) and #C5 (data)
-  wire        opl_enable = iorq && (a[7:1] == 7'b1100010);
+  // OPL3 ports #C4-#C7 (bank 0 address/data, bank 1 address/data)
+  wire        opl_enable = iorq && (a[7:2] == 6'b110001);
   wire  [7:0] opl_do;
   wire signed [15:0] opl_l;
   wire signed [15:0] opl_r;
 
-  opl opl
+  opl3 opl3
   (
-    .reset(rst),
     .clk(fclk),
-    .wr_n(wr_n),
+    .clk_host(fclk),
+    .clk_dac(fclk),
+    .ic_n(rst_n),
     .cs_n(~opl_enable),
+    .rd_n(rd_n),
+    .wr_n(wr_n),
+    .address(a[1:0]),
     .din(d),
-    .a(a[0]),
     .dout(opl_do),
-    .out_l(opl_l),
-    .out_r(opl_r)
+    .sample_l(opl_l),
+    .sample_r(opl_r)
   );
 
 
