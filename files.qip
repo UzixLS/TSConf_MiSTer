@@ -1,5 +1,6 @@
 set_global_assignment -name QIP_FILE rtl/T80/T80.qip
 set_global_assignment -name VERILOG_FILE rtl/common/clock.v
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/common/copper.v
 set_global_assignment -name VERILOG_FILE rtl/common/dma.v
 set_global_assignment -name VERILOG_FILE rtl/common/resetter.v
 set_global_assignment -name VERILOG_FILE rtl/common/spi.v

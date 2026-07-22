@@ -6,7 +6,7 @@ module video_top
 (
   // clocks
   input wire clk,
-  input wire f0, f1,
+  input wire f1,
   input wire h1,
   input wire c0, c1, c3,
   // input wire t0,  // debug!!!
@@ -32,6 +32,8 @@ module video_top
   output wire hblank,
   output wire vblank,
   output wire pix_stb,
+  output wire [8:0] ray_x,
+  output wire [8:0] ray_y,
 
   // Z80 controls
   input wire [ 7:0] d,
@@ -39,6 +41,7 @@ module video_top
   input wire [ 7:0] zma,
   input wire cram_we,
   input wire sfile_we,
+  input wire [ 7:0] xt_wr_data,
 
   // port write strobes
   input wire zborder_wr,
@@ -70,8 +73,9 @@ module video_top
 
   // ZX controls
   input wire  res,
-  output wire int_start,
+  output wire int_start_s,
   output wire line_start_s,
+  output wire frame_start_s,
 `ifdef PENT_312
   output wire [4:0] hcnt,
   output wire upper8,
@@ -144,7 +148,6 @@ module video_top
   wire [8:0] lcount;
 
   // synchro
-  wire frame_start;
   wire pix_start;
   wire tv_pix_start;
   wire vga_pix_start;
@@ -208,6 +211,7 @@ module video_top
   (
     .clk          (clk),
     .d            (d),
+    .xt_wr_data   (xt_wr_data),
     .res          (res),
     .line_start_s (line_start_s),
     .border_wr    (border_wr),
@@ -249,9 +253,9 @@ module video_top
     .hint_beg     (hint_beg),
     .vint_beg     (vint_beg),
 `ifdef AUTO_INT
-    .int_start    (int_start),
+    .int_start_s  (int_start_s),
 `else
-    .int_start    (1'b0),
+    .int_start_s  (1'b0),
 `endif
     .tsconf       (tsconf),
     .tmpage       (tmpage),
@@ -321,6 +325,8 @@ module video_top
     .x_offs         (x_offs_mode[1:0]),
     .y_offs_wr      (gy_offsl_wr || gy_offsh_wr),
     .line_start_s   (line_start_s),
+    .frame_start_s  (frame_start_s),
+    .int_start_s    (int_start_s),
     .hint_beg       (hint_beg),
     .vint_beg       (vint_beg),
     .hsync          (hsync),
@@ -334,6 +340,8 @@ module video_top
     .vga_cnt_out    (vga_cnt_out),
     .ts_raddr       (ts_raddr),
     .lcount         (lcount),
+    .ray_x          (ray_x),
+    .ray_y          (ray_y),
     .cnt_col        (cnt_col),
     .cnt_row        (cnt_row),
     .cptr           (cptr),
@@ -350,8 +358,6 @@ module video_top
     .cstart         (x_offs_mode[9:2]),
     .rstart         (gy_offs),
     .vga_line       (vga_line),
-    .frame_start    (frame_start),
-    .int_start      (int_start),
     .v_pf           (v_pf),
     .hpix           (hpix),
     .v_ts           (v_ts),

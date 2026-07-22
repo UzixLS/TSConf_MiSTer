@@ -149,6 +149,9 @@ module tsconf
   wire external_port;
   wire ide_stall;
 
+  wire [8:0] ray_x;
+  wire [8:0] ray_y;
+
   wire rampage_wr;        // ports #10AF-#13AF
   wire [7:0] memconf;
   wire [7:0] xt_ramp[0:3];
@@ -164,7 +167,8 @@ module tsconf
 `endif
   wire [3:0] cacheconf;
   wire [7:0] border;
-  wire int_start_lin;
+  wire line_start_s;
+  wire frame_start_s;
   wire int_start_frm;
   wire int_start_dma;
 
@@ -247,6 +251,13 @@ module tsconf
   wire cram_we;
   wire sfile_we;
   wire regs_we;
+`ifdef COPPER
+  wire clist_we;
+  wire copper_wr;
+  wire copper_int;
+  wire copper_rdy;
+  wire cpu_xt_access;
+`endif
 
 `ifdef PENT_312
   wire boost_start;
@@ -271,6 +282,13 @@ module tsconf
   wire iord_s;
   wire iowr_s;
   wire iordwr_s;
+  wire [7:0] xt_wr_addr;
+  wire [7:0] xt_wr_data;
+`ifdef COPPER
+  wire copper_xt_wr;
+  wire [7:0] copper_xt_wr_addr;
+  wire [7:0] copper_xt_wr_data;
+`endif
   wire memrd;
   wire memwr;
   wire memrw;
@@ -317,6 +335,9 @@ module tsconf
   wire [7:0] dma_wraddr;
   wire dma_cram_we;
   wire dma_sfile_we;
+`ifdef COPPER
+  wire dma_clist_we;
+`endif
 
   wire cpu_spi_req;
   wire dma_spi_req;
@@ -540,7 +561,6 @@ module tsconf
   (
     .clk(fclk),
     .res(res),
-    .f0(f0),
     .f1(f1),
     .h1(h1),
     .c0(c0),
@@ -562,6 +582,8 @@ module tsconf
     .vblank(VGA_VBLANK),
     .pix_stb(VGA_CEPIX),
     .csync(),
+    .ray_x(ray_x),
+    .ray_y(ray_y),
     .cfg_60hz(cfg_60hz),
     .vga_on(cfg_vga_on),
     .border_wr(border_wr),
@@ -608,13 +630,39 @@ module tsconf
     .upper8(upper8),
 `endif
     .d(d),
+    .xt_wr_data(xt_wr_data),
     .zmd(zmd),
     .zma(zma),
     .cram_we(cram_we),
     .sfile_we(sfile_we),
-    .int_start(int_start_frm),
-    .line_start_s(int_start_lin)
+    .int_start_s(int_start_frm),
+    .line_start_s(line_start_s),
+    .frame_start_s(frame_start_s)
   );
+
+`ifdef COPPER
+  copper copper
+  (
+    .clk          (fclk),
+    .res          (res),
+    .cpu_data     (d),
+    .cpu_wr       (copper_wr),
+    .cpu_xt_access(cpu_xt_access),
+    .cl_wr_addr   (zma),
+    .cl_wr_data   (zmd),
+    .cl_wr        (clist_we),
+    .ts_reg_addr  (copper_xt_wr_addr),
+    .ts_reg_data  (copper_xt_wr_data),
+    .ts_reg_wr    (copper_xt_wr),
+    .sig_int      (copper_int),
+    .sig_rdy      (copper_rdy),
+    .ray_x        (ray_x[8:1]),
+    .ray_y        (ray_y),
+    .dma_done     (!dma_act),
+    .line_start_s (line_start_s),
+    .frame_start_s(frame_start_s)
+  );
+`endif
 
   vdac vdac
   (
@@ -636,6 +684,10 @@ module tsconf
     .fmaddr(fmaddr),
     .zmd(zmd),
     .zma(zma),
+`ifdef COPPER
+    .dma_clist_we(dma_clist_we),
+    .clist_we(clist_we),
+`endif
     .dma_wraddr(dma_wraddr),
     .dma_data(dma_data),
     .dma_cram_we(dma_cram_we),
@@ -705,6 +757,11 @@ module tsconf
     .iord_s(iord_s),
     .iowr_s(iowr_s),
     .iordwr_s(iordwr_s),
+`ifdef COPPER
+    .copper_xt_wr(copper_xt_wr),
+    .copper_xt_wr_addr(copper_xt_wr_addr),
+    .copper_xt_wr_data(copper_xt_wr_data),
+`endif
     .ay_bdir(),
     .ay_bc1(),
     .vg_intrq(intrq),
@@ -723,6 +780,8 @@ module tsconf
     .ftcs_n(ftcs_n),
 `ifdef ESP32_SPI
     .espcs_n(espcs_n),
+    .espcs_in(espcs_in),
+    .esp_ft_spi_dis(esp_ft_spi_dis),
 `endif
 `endif
 `ifdef IDE_HDD
@@ -735,6 +794,8 @@ module tsconf
     .ide_ready(ide_ready),
     .ide_stall(ide_stall),
 `endif
+    .xt_wr_addr(xt_wr_addr),
+    .xt_wr_data(xt_wr_data),
     .border_wr(border_wr),
     .zborder_wr(zborder_wr),
     .zvpage_wr(zvpage_wr),
@@ -769,6 +830,11 @@ module tsconf
     .memconf(memconf),
     .intmask(intmask),
     .fddvirt(fddvirt),
+`ifdef COPPER
+    .copper_wr(copper_wr),
+    .copper_rdy(copper_rdy),
+    .cpu_xt_access(cpu_xt_access),
+`endif
 `ifdef FDR
     .fdr_cnt(fdr_cnt),
     .fdr_en(fdr_en),
@@ -804,7 +870,7 @@ module tsconf
     .c2(c2),
     .rst_n(rst_n),
     .int_start(int_start_dma),
-    .zdata(d),
+    .zdata(xt_wr_data),
     .dmaport_wr(dmaport_wr),
     .dma_act(dma_act),
     .dram_addr(dma_addr),
@@ -817,12 +883,21 @@ module tsconf
     .wraddr(dma_wraddr),
     .cram_we(dma_cram_we),
     .sfile_we(dma_sfile_we),
+`ifdef COPPER
+    .clist_we(dma_clist_we),
+`endif
 `ifdef IDE_HDD
     .ide_in(ide_d),
     .ide_out(dma_ide_out),
     .ide_req(dma_ide_req),
     .ide_rnw(dma_ide_rnw),
     .ide_stb(ide_stb),
+`endif
+`ifdef FDR
+    .fdr_in(fdr_rle),
+    .fdr_req(fdr_req),
+    .fdr_stb(fdr_stb),
+    .fdr_stop(fdr_stop),
 `endif
     .spi_req(dma_spi_req),
     .spi_stb(spi_start),
@@ -832,14 +907,22 @@ module tsconf
     .wtp_stb(dma_wtp_stb),
     .wtp_rddata(mus_data)   // data must be available 1 clk earlier than wait_data (mus_data = shift_in in slavespi.v)
     // .wtp_wrdata(dma_wtp_din)
-`ifdef FDR
-    ,
-    .fdr_in(fdr_rle),
-    .fdr_req(fdr_req),
-    .fdr_stb(fdr_stb),
-    .fdr_stop(fdr_stop)
-`endif
   );
+
+`ifdef FDR
+  fddrip fddrip
+  (
+    .clk(fclk),
+    .rdat_n(rdat_b_n),
+    .reset(!fdr_en),
+    .cnt_latch(fdr_cnt_lat),
+    .data(fdr_rle),
+    .data_cnt_l(fdr_cnt),
+    .req(fdr_req),
+    .stb(fdr_stb),
+    .stop(fdr_stop)
+  );
+`endif
 
   zint zint
   (
@@ -850,9 +933,9 @@ module tsconf
     .im2vect(im2vect),
     .intmask(intmask),
 `ifdef IDE_VDAC2
-    .int_start_lin(vdac2_msel ? int_start_ft : int_start_lin),
+    .int_start_lin(vdac2_msel ? int_start_ft : line_start_s),
 `else
-    .int_start_lin(int_start_lin),
+    .int_start_lin(line_start_s),
 `endif
 `ifdef PENT_312
     .boost_start(boost_start),
@@ -860,6 +943,9 @@ module tsconf
     .int_start_frm(int_start_frm),
     .int_start_dma(int_start_dma),
     .int_start_wtp(int_start_wtp),
+`ifdef COPPER
+    .int_start_cpr(copper_int),
+`endif
     .vdos(pre_vdos),
     .intack(intack),
     .int_n(int_n)
