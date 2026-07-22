@@ -1125,6 +1125,7 @@ module tsconf
   (
     .RESET(rst),
     .CLK(clk),
+    .CE(ce),
 
     .A(a[3]),
     .DI(d),

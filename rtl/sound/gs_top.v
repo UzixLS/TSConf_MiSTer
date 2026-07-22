@@ -2,6 +2,7 @@ module gs_top
 (
    input         RESET,
    input         CLK,
+   input         CE,
 
    input         A,
    input   [7:0] DI,
@@ -91,20 +92,11 @@ module gs_top
   always @(posedge CLK)
     reset <= RESET || !rom_inited;
 
-  reg ce_14m;
-  always @(negedge CLK) begin
-    reg [2:0] div;
-    div <= div + 1'd1;
-    if(div == 5) div <= 0;
-    ce_14m <= !div;
-  end
-
-
-  gs #(.INT_DIV(373)) gs
+  gs #(.INT_DIV(746)) gs
   (
     .RESET(reset),
     .CLK(CLK),
-    .CE(ce_14m),
+    .CE(CE),
 
     .A(A),
     .DI(DI),
