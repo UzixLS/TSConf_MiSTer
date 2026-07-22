@@ -20,8 +20,7 @@ set_global_assignment -name VERILOG_FILE rtl/sound/soundrive.v
 set_global_assignment -name QIP_FILE rtl/sound/opl3/opl3.qip
 set_global_assignment -name VERILOG_FILE rtl/sound/gs.v
 set_global_assignment -name VERILOG_FILE rtl/sound/gs_top.v
-set_global_assignment -name VERILOG_FILE rtl/sound/compressor.v
-set_global_assignment -name VERILOG_FILE rtl/sound/hybrid_pwm_sd_2ndorder.v
+set_global_assignment -name VERILOG_FILE rtl/sound/mixer.v
 set_global_assignment -name VERILOG_FILE rtl/video/video_ts_render.v
 set_global_assignment -name VERILOG_FILE rtl/video/video_ts.v
 set_global_assignment -name VERILOG_FILE rtl/video/video_sync.v

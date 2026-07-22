@@ -43,8 +43,8 @@ module tsconf
 `endif
 
   // Audio
-  output [15:0] SOUND_L,
-  output [15:0] SOUND_R,
+  output signed [15:0] SOUND_L,
+  output signed [15:0] SOUND_R,
 
   // Misc. I/O
   input         COLD_RESET,
@@ -63,6 +63,7 @@ module tsconf
   input   [2:0] CFG_JOYSTICK1,
   input   [2:0] CFG_JOYSTICK2,
   input         CFG_TURBOSOUND_ACB,
+  input         CFG_AUDIO_BOOST,
 
   // User input
   input  [10:0] PS2_KEY,
@@ -1059,7 +1060,14 @@ module tsconf
   wire ts_enable = ~iorq_n & a[0] & a[15] & ~a[1];
   wire ts_we     = ts_enable & ~wr_n;
 
-  wire [11:0] ts_l, ts_r;
+  wire  [7:0] ts_psg_ch_a_0;
+  wire  [7:0] ts_psg_ch_b_0;
+  wire  [7:0] ts_psg_ch_c_0;
+  wire signed [15:0] ts_opn_0;
+  wire  [7:0] ts_psg_ch_a_1;
+  wire  [7:0] ts_psg_ch_b_1;
+  wire  [7:0] ts_psg_ch_c_1;
+  wire signed [15:0] ts_opn_1;
   wire  [7:0] ts_do;
   wire  [7:0] ioa_0_out;
   wire  [7:0] ioa_1_out;
@@ -1084,9 +1092,14 @@ module tsconf
     .BC(a[14]),
     .DI(d),
     .DO(ts_do),
-    .CHANNEL_L(ts_l),
-    .CHANNEL_R(ts_r),
-    .ACB(CFG_TURBOSOUND_ACB),
+    .PSG_CH_A_0(ts_psg_ch_a_0),
+    .PSG_CH_B_0(ts_psg_ch_b_0),
+    .PSG_CH_C_0(ts_psg_ch_c_0),
+    .OPN_0(ts_opn_0),
+    .PSG_CH_A_1(ts_psg_ch_a_1),
+    .PSG_CH_B_1(ts_psg_ch_b_1),
+    .PSG_CH_C_1(ts_psg_ch_c_1),
+    .OPN_1(ts_opn_1),
     .IOA_0_out(ioa_0_out),
     .IOA_1_out(ioa_1_out)
   );
@@ -1101,8 +1114,10 @@ module tsconf
   wire        gs_dram_rnw;
   wire        gs_dram_ack;
 
-  wire [14:0] gs_l;
-  wire [14:0] gs_r;
+  wire signed [14:0] gs_a;
+  wire signed [14:0] gs_b;
+  wire signed [14:0] gs_c;
+  wire signed [14:0] gs_d;
   wire [7:0]  gs_do_bus;
   wire        gs_sel = ~iorq_n & m1_n & (a[7:4] == 'hB && a[2:0] == 'h3);
 
@@ -1126,8 +1141,10 @@ module tsconf
     .DRAM_RNW(gs_dram_rnw),
     .DRAM_ACK(gs_dram_ack),
 
-    .OUTL(gs_l),
-    .OUTR(gs_r),
+    .OUT_A(gs_a),
+    .OUT_B(gs_b),
+    .OUT_C(gs_c),
+    .OUT_D(gs_d),
 
     .ROM_INITING(loader_act && loader_cs_rom_gs)
   );
@@ -1190,14 +1207,36 @@ module tsconf
   always @(posedge fclk) if (beeper_wr) port_xxfe_reg <= d;
 
   // Audio output
-  wire [11:0] audio_l = ts_l + {gs_l[14], gs_l[14:4]} + {2'b00, covox_a, 2'b00} + {2'b00, covox_b, 2'b00} + {1'b0, saa_out_l, 3'b000} + opl_l[15:4] + {3'b000, port_xxfe_reg[4], 8'b00000000};
-  wire [11:0] audio_r = ts_r + {gs_r[14], gs_r[14:4]} + {2'b00, covox_c, 2'b00} + {2'b00, covox_d, 2'b00} + {1'b0, saa_out_r, 3'b000} + opl_r[15:4] + {3'b000, port_xxfe_reg[4], 8'b00000000};
-
-  compressor compressor
+  mixer mixer
   (
-    fclk,
-    audio_l, audio_r,
-    SOUND_L, SOUND_R
+    .CLK(fclk),
+    .ACB(CFG_TURBOSOUND_ACB),
+    .BOOST(CFG_AUDIO_BOOST),
+    .PSG_CH_A_0(ts_psg_ch_a_0),
+    .PSG_CH_B_0(ts_psg_ch_b_0),
+    .PSG_CH_C_0(ts_psg_ch_c_0),
+    .OPN_0(ts_opn_0),
+    .PSG_CH_A_1(ts_psg_ch_a_1),
+    .PSG_CH_B_1(ts_psg_ch_b_1),
+    .PSG_CH_C_1(ts_psg_ch_c_1),
+    .OPN_1(ts_opn_1),
+    .GS_A(gs_a),
+    .GS_B(gs_b),
+    .GS_C(gs_c),
+    .GS_D(gs_d),
+    .COVOX_A(covox_a),
+    .COVOX_B(covox_b),
+    .COVOX_C(covox_c),
+    .COVOX_D(covox_d),
+    .SAA_L(saa_out_l),
+    .SAA_R(saa_out_r),
+    .OPL_L(opl_l),
+    .OPL_R(opl_r),
+    .BEEPER(port_xxfe_reg[4]),
+    .TAPE_OUT(port_xxfe_reg[3]),
+    .TAPE_IN(TAPE_IN),
+    .SOUND_L(SOUND_L),
+    .SOUND_R(SOUND_R)
   );
 
 

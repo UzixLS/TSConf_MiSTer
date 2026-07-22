@@ -84,6 +84,8 @@ localparam CONF_STR = {
 	"P2OD,VDAC1,ON,OFF;",
 	"O34,Stereo mix,None,25%,50%,100%;",
 	"O5,PSG panning,ABC,ACB;",
+	"O6,Audio Boost,On,Off;",
+	"-;",
 	"OE,CPU Type,CMOS,NMOS;",
 	"P1,NVRAM;",
 	"P1o56,CPU Speed (MHz),3.5,7,14;",
@@ -116,6 +118,7 @@ wire cfg_60hz = ~status[12];
 wire cfg_vdac = ~status[13];
 wire cfg_out0 = ~status[14];
 wire cfg_turbosound_acb = status[5];
+wire cfg_audio_boost = ~status[6];
 
 wire [1:0] ar = status[33:32];
 wire vcrop_en = status[34];
@@ -371,7 +374,7 @@ wire [7:0] R,G,B;
 wire HBlank,VBlank;
 wire VS,HS;
 wire ce_vid;
-wire [15:0] sound_l,sound_r;
+wire signed [15:0] sound_l,sound_r;
 wire midi_out,uart_out;
 
 tsconf tsconf
@@ -424,6 +427,7 @@ tsconf tsconf
 	.CFG_JOYSTICK1(cfg_joystick1),
 	.CFG_JOYSTICK2(cfg_joystick2),
 	.CFG_TURBOSOUND_ACB(cfg_turbosound_acb),
+	.CFG_AUDIO_BOOST(cfg_audio_boost),
 
 	.PS2_KEY(ps2_key),
 	.PS2_MOUSE(core_mouse),

@@ -18,8 +18,10 @@ module gs_top
    output        DRAM_RNW,
    input         DRAM_ACK,
 
-   output [14:0] OUTL,
-   output [14:0] OUTR,
+   output signed [14:0] OUT_A,
+   output signed [14:0] OUT_B,
+   output signed [14:0] OUT_C,
+   output signed [14:0] OUT_D,
 
    input         ROM_INITING
 );
@@ -118,8 +120,10 @@ module gs_top
     .MEM_WR(mem_wr),
     .MEM_WAIT(DRAM_REQ),
 
-    .OUTL(OUTL),
-    .OUTR(OUTR)
+    .OUT_A(OUT_A),
+    .OUT_B(OUT_B),
+    .OUT_C(OUT_C),
+    .OUT_D(OUT_D)
   );
 
 endmodule

@@ -88,8 +88,10 @@ module gs
 	input         MEM_WAIT,
 	output        MEM_ROM,
 
-	output [14:0] OUTL,
-	output [14:0] OUTR
+	output signed [14:0] OUT_A,
+	output signed [14:0] OUT_B,
+	output signed [14:0] OUT_C,
+	output signed [14:0] OUT_D
 );
 
 parameter INT_DIV = 291;
@@ -225,9 +227,9 @@ assign MEM_DI   = cpu_do_bus;
 assign MEM_ROM  = ~|page_addr;
 
 
-reg signed [14:0] out_a,out_b,out_c,out_d;
+reg signed [14:0] out_a, out_b, out_c, out_d;
 always @(posedge CLK) begin
-	if(CE) begin
+	if (CE) begin
 		out_a <= ch_a * port_06;
 		out_b <= ch_b * port_07;
 		out_c <= ch_c * port_08;
@@ -235,15 +237,9 @@ always @(posedge CLK) begin
 	end
 end
 
-reg signed [14:0] outl, outr;
-always @(posedge CLK) begin
-	if(CE) begin
-		outl <= out_a + out_b;
-		outr <= out_c + out_d;
-	end
-end
-
-assign OUTL = outl;
-assign OUTR = outr;
+assign OUT_A = out_a;
+assign OUT_B = out_b;
+assign OUT_C = out_c;
+assign OUT_D = out_d;
 
 endmodule
