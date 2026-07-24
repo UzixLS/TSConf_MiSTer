@@ -364,6 +364,7 @@ wire [7:0] R,G,B;
 wire HBlank,VBlank;
 wire VS,HS;
 wire ce_vid;
+wire hires;
 wire signed [15:0] sound_l,sound_r;
 wire midi_out,uart_out;
 wire reset_out;
@@ -393,6 +394,7 @@ tsconf tsconf
 	.VGA_HBLANK(HBlank),
 	.VGA_VBLANK(VBlank),
 	.VGA_CEPIX(ce_vid),
+	.VGA_HIRES(hires),
 
 	.SD_SO(sdmiso),
 	.SD_SI(sdmosi),
@@ -458,18 +460,46 @@ assign LED_USER = (vsd_sel & sd_act) | ioctl_download;
 assign LED_DISK = {1'b1, ~vsd_sel & sd_act};
 
 //////////////////   VIDEO   ///////////////////
-reg ce_pix;
-always @(posedge CLK_VIDEO) begin
-	reg old_ce;
-	old_ce <= ce_vid;
-	ce_pix <= ~old_ce & ce_vid;
-end
-
 reg VSync,HSync;
 always @(posedge CLK_VIDEO) begin
 	HSync <= HS;
 	if(~HSync & HS) VSync <= VS;
 end
+
+reg ce_pix_native = 0;
+always @(posedge CLK_VIDEO) begin
+	reg old_ce = 0;
+	old_ce <= ce_vid;
+	ce_pix_native <= ~old_ce & ce_vid;
+end
+
+reg ce_pix_fixed_14 = 0;
+always @(posedge CLK_VIDEO) begin
+	reg [1:0] ce_fixed_div = 0;
+	ce_fixed_div <= ce_fixed_div + 1'd1;
+	ce_pix_fixed_14 <= !ce_fixed_div;
+end
+
+reg [1:0] hires_sync = 0;
+reg seen_hires = 0;
+reg ce_pix_force_14mhz = 0;
+reg VSync_old = 0;
+
+// scaler requires a constant pixel rate within a frame
+always @(posedge CLK_VIDEO) begin
+	hires_sync <= {hires_sync[0],hires};
+	VSync_old <= VSync;
+
+	if(~VSync_old & VSync) begin
+		ce_pix_force_14mhz <= seen_hires;
+		seen_hires <= hires_sync[1];
+	end
+	else if(hires_sync[1]) begin
+		seen_hires <= 1;
+	end
+end
+
+wire ce_pix = ce_pix_force_14mhz ? ce_pix_fixed_14 : ce_pix_native;
 
 assign VGA_SL = {scale == 3,scale == 2};
 video_mixer #(.GAMMA(1)) video_mixer

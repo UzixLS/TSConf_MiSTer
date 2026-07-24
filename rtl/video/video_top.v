@@ -32,6 +32,7 @@ module video_top
   output wire hblank,
   output wire vblank,
   output wire pix_stb,
+  output wire tv_hires,
   output wire [8:0] ray_x,
   output wire [8:0] ray_y,
 
@@ -130,7 +131,6 @@ module video_top
   wire [9:0] x_offs_mode;
   wire [4:0] go_offs;
   wire [1:0] render_mode;
-  wire tv_hires;
   wire vga_hires;
   wire v60hz;
   wire nogfx = vconf[5];

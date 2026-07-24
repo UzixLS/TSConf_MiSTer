@@ -32,6 +32,7 @@ module tsconf
   output        VGA_HBLANK,
   output        VGA_VBLANK,
   output        VGA_CEPIX,
+  output        VGA_HIRES,
 
   // SD/MMC Memory Card
   input         SD_SO,
@@ -582,6 +583,7 @@ module tsconf
     .hblank(VGA_HBLANK),
     .vblank(VGA_VBLANK),
     .pix_stb(VGA_CEPIX),
+    .tv_hires(VGA_HIRES),
     .csync(),
     .ray_x(ray_x),
     .ray_y(ray_y),
