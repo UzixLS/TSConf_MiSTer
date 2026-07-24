@@ -47,8 +47,8 @@ module tsconf
   output signed [15:0] SOUND_R,
 
   // Misc. I/O
-  input         COLD_RESET,
-  input         WARM_RESET,
+  input         RESET,
+  output        RESET_OUT,
   input  [64:0] RTC,
   input         TAPE_IN,
   output reg    MIDI_OUT = 1'b0,
@@ -404,9 +404,10 @@ module tsconf
   resetter myrst
   (
     .clk(fclk),
-    .rst_in_n(~(COLD_RESET | WARM_RESET | key_reset)),
+    .rst_in_n(~(RESET | key_reset)),
     .rst_out_n(rst_n)
   );
+  assign RESET_OUT = ~rst_n;
 
   zclock zclock
   (
@@ -1031,7 +1032,7 @@ module tsconf
   keyboard keyboard
   (
     .clk(clk),
-    .reset(COLD_RESET | WARM_RESET),
+    .reset(RESET),
     .a(a[15:8]),
     .keyb(kbd_port_data),
     .key_reset(key_reset),

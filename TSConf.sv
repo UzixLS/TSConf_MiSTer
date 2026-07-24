@@ -68,7 +68,7 @@ assign SDRAM2_nWE  = 1'b1;
 localparam CONF_STR = {
 	"TSConf;",
 	"UART115200,MIDI;",
-	"SC0,VHD,Mount virtual SD;",
+	"SC0,VHD,Mount SD image;",
 	"-;",
 	"OFH,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor,QAOPM;",
 	"OIK,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor,QAOPM;",
@@ -100,9 +100,10 @@ localparam CONF_STR = {
 	"P1oQ,NGS Reset,OFF,ON;",
 	"P1oR,FT8xx Reset,OFF,ON;",
 	"P1oSU,INT Offset,1,2,3,4,5,6,7,0;",
-	"P1T0,Apply and reset;",
+	"P1-;",
+	"P1T7,Apply;",
 	"-;",
-	"T0,Reset;",
+	"R0,Reset;",
 	"J,Fire 1,Fire 2,Fire 3,Fire 4;",
 	"jn,A,B,X,Y;",
 	"jp,B,A,Y,X;",
@@ -288,42 +289,32 @@ reg [7:0] nvram_address = 8'hB1;
 reg [15:0] nvram_crc = 16'hFFFF;
 reg [2:0] nvram_crc_bit;
 reg [25:0] nvram_cfg_latched;
-reg nvram_boot_pending = 1'b1;
 reg old_status_reset = 1'b0;
-reg [23:0] nvram_boot_delay = 24'd0;
-reg [25:0] nvram_cfg_seen = 26'd0;
+reg nvram_initial_load_pending = 1'b1;
 
-wire nvram_update_active = nvram_state != NVRAM_IDLE;
-wire nvram_boot_ready = &nvram_boot_delay;
+wire nvram_initial_load_trigger = nvram_initial_load_pending && old_status_reset && !status[0];
+wire nvram_load_trigger = nvram_initial_load_trigger || status[7];
+wire nvram_update_active = nvram_initial_load_pending || (nvram_state != NVRAM_IDLE) || nvram_load_trigger;
 wire nvram_address_is_cfg = (nvram_address >= 8'hB1) && (nvram_address <= 8'hBC);
 wire [7:0] nvram_config_data = nvram_cfg_value(nvram_address, nvram_cfg_latched);
 wire [7:0] nvram_crc_data = nvram_address_is_cfg ? nvram_config_data : nvram_data_out;
 wire nvram_cmos_wr = ((nvram_state == NVRAM_DATA) && nvram_address_is_cfg) ||
 	(nvram_state == NVRAM_CRC_LOW) || (nvram_state == NVRAM_CRC_HIGH);
-wire [7:0] nvram_cmos_data = (nvram_state == NVRAM_CRC_LOW) ? nvram_crc[7:0] :
-	(nvram_state == NVRAM_CRC_HIGH) ? nvram_crc[15:8] : nvram_config_data;
+wire [7:0] nvram_cmos_data =
+	(nvram_state == NVRAM_CRC_LOW) ? nvram_crc[7:0] :
+	(nvram_state == NVRAM_CRC_HIGH) ? nvram_crc[15:8] :
+	nvram_config_data;
 
 // BIOS calculates CRC over B1-E5 (B0/FDDVirt is intentionally excluded) and
 // stores it little-endian at E6-E7. Keep the core in reset while updating so
 // BIOS never observes a partially written configuration.
 always @(posedge clk_sys) begin
 	old_status_reset <= status[0];
-
-	// hps_io is external code and doesn't expose a status-ready handshake. Wait
-	// until HPS downloads are done and the NVRAM status bits have been stable for
-	// about 200 ms before allowing the first BIOS start.
-	if(nvram_boot_pending && (nvram_state == NVRAM_IDLE)) begin
-		if(RESET || ioctl_download || (nvram_cfg_seen != nvram_cfg)) begin
-			nvram_cfg_seen <= nvram_cfg;
-			nvram_boot_delay <= 24'd0;
-		end
-		else if(!nvram_boot_ready) nvram_boot_delay <= nvram_boot_delay + 1'd1;
-	end
+	if(nvram_initial_load_trigger) nvram_initial_load_pending <= 1'b0;
 
 	case(nvram_state)
 		NVRAM_IDLE: begin
-			if((nvram_boot_pending && nvram_boot_ready && !RESET && !ioctl_download) ||
-				(!nvram_boot_pending && !old_status_reset && status[0])) begin
+			if(nvram_load_trigger) begin
 				nvram_cfg_latched <= nvram_cfg;
 				nvram_address <= 8'hB1;
 				nvram_crc <= 16'hFFFF;
@@ -361,7 +352,6 @@ always @(posedge clk_sys) begin
 		end
 
 		NVRAM_CRC_HIGH: begin
-			nvram_boot_pending <= 1'b0;
 			nvram_state <= NVRAM_IDLE;
 		end
 
@@ -376,6 +366,7 @@ wire VS,HS;
 wire ce_vid;
 wire signed [15:0] sound_l,sound_r;
 wire midi_out,uart_out;
+wire reset_out;
 
 tsconf tsconf
 (
@@ -412,8 +403,8 @@ tsconf tsconf
 	.SOUND_L(sound_l),
 	.SOUND_R(sound_r),
 
-	.COLD_RESET(RESET | status[0] | reset_img | ioctl_download | nvram_boot_pending | nvram_update_active),
-	.WARM_RESET(buttons[1]),
+	.RESET(RESET | status[0] | buttons[1] | reset_img | ioctl_download | nvram_update_active),
+	.RESET_OUT(reset_out),
 	.RTC(RTC),
 	.TAPE_IN(UART_RXD),
 	.MIDI_OUT(midi_out),
@@ -533,7 +524,7 @@ wire sdmiso = !vsd_sel ? SD_MISO :
 sd_card sd_card
 (
 	.*,
-	.reset(RESET | status[0]),
+	.reset(reset_out),
 	.clk_spi(clk_sys),
 	.sdhc(1),
 	.sck(sdclk),
