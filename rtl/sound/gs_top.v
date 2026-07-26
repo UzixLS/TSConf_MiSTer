@@ -92,11 +92,18 @@ module gs_top
   always @(posedge CLK)
     reset <= RESET || !rom_inited;
 
+  // CE comes from a falling-edge divider and otherwise has only half a CLK
+  // period to reach the high-fanout CPU enable network. Register it locally so
+  // all CE-qualified GS logic observes the same value for a full CLK period.
+  reg gs_ce = 1'b0;
+  always @(posedge CLK)
+    gs_ce <= CE;
+
   gs #(.INT_DIV(746)) gs
   (
     .RESET(reset),
     .CLK(CLK),
-    .CE(CE),
+    .CE(gs_ce),
 
     .A(A),
     .DI(DI),

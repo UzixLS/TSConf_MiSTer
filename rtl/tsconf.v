@@ -8,6 +8,7 @@ module tsconf
 (
   // Clocks
   input         clk,
+  input         fclk,
   input         ce,
 
   // SDRAM (32MB 16x16bit)
@@ -382,9 +383,6 @@ module tsconf
   assign VRED = CFG_VDAC? vred_vdac : {vred,vred,vred,vred};
   assign VGRN = CFG_VDAC? vgrn_vdac : {vgrn,vgrn,vgrn,vgrn};
   assign VBLU = CFG_VDAC? vblu_vdac : {vblu,vblu,vblu,vblu};
-
-  wire fclk = clk & ce;
-
 
   clock clock
   (
@@ -1248,10 +1246,8 @@ module tsconf
   reg ce_saa;
   always @(posedge fclk) begin
     reg [2:0] div;
-
     div <= div + 1'd1;
     if(div == 6) div <= 0;
-
     ce_saa <= (div == 0 || div == 3);
   end
 

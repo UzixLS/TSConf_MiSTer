@@ -152,11 +152,26 @@ pll pll
 
 reg ce_28m;
 always @(negedge clk_sys) begin
-	reg [1:0] div;
+	reg [1:0] div = 2'd2;
 	div <= div + 1'd1;
 	if(div == 2) div <= 0;
 	ce_28m <= !div;
 end
+
+// Platform-specific gated clock for the TSConf core. ce_28m is registered on
+// the falling edge of clk_sys, so it is stable throughout each selected pulse.
+wire fclk;
+cyclonev_clkena fclk_clkena
+(
+	.inclk (clk_sys),
+	.ena   (ce_28m),
+	.enaout(),
+	.outclk(fclk)
+);
+defparam
+	fclk_clkena.clock_type = "Global Clock",
+	fclk_clkena.ena_register_mode = "none",
+	fclk_clkena.ena_register_power_up = "low";
 
 //////////////////   HPS I/O   ///////////////////
 wire [31:0] joy_0;
@@ -372,6 +387,7 @@ wire reset_out;
 tsconf tsconf
 (
 	.clk(clk_sys),
+	.fclk(fclk),
 	.ce(ce_28m),
 
 	.SDRAM_DQ(SDRAM_DQ),
@@ -460,22 +476,36 @@ assign LED_USER = (vsd_sel & sd_act) | ioctl_download;
 assign LED_DISK = {1'b1, ~vsd_sel & sd_act};
 
 //////////////////   VIDEO   ///////////////////
+reg [7:0] R_r,G_r,B_r;
+reg HBlank_r,VBlank_r,HS_r,VS_r;
+reg ce_vid_r;
+always @(posedge CLK_VIDEO) begin
+	R_r <= R;
+	G_r <= G;
+	B_r <= B;
+	HBlank_r <= HBlank;
+	VBlank_r <= VBlank;
+	HS_r <= HS;
+	VS_r <= VS;
+	ce_vid_r <= ce_vid;
+end
+
 reg VSync,HSync;
 always @(posedge CLK_VIDEO) begin
-	HSync <= HS;
-	if(~HSync & HS) VSync <= VS;
+	HSync <= HS_r;
+	if(~HSync & HS_r) VSync <= VS_r;
 end
 
 reg ce_pix_native = 0;
 always @(posedge CLK_VIDEO) begin
 	reg old_ce = 0;
-	old_ce <= ce_vid;
-	ce_pix_native <= ~old_ce & ce_vid;
+	old_ce <= ce_vid_r;
+	ce_pix_native <= ~old_ce & ce_vid_r;
 end
 
 reg ce_pix_fixed_14 = 0;
 always @(posedge CLK_VIDEO) begin
-	reg [1:0] ce_fixed_div = 0;
+	reg [1:0] ce_fixed_div = 3'd3;
 	ce_fixed_div <= ce_fixed_div + 1'd1;
 	ce_pix_fixed_14 <= !ce_fixed_div;
 end
@@ -510,13 +540,13 @@ video_mixer #(.GAMMA(1)) video_mixer
 	.scandoubler(scale || forced_scandoubler),
 	.hq2x(scale == 1),
 	.gamma_bus(gamma_bus),
-	.R(R),
-	.G(G),
-	.B(B),
+	.R(R_r),
+	.G(G_r),
+	.B(B_r),
 	.HSync(HSync),
 	.VSync(VSync),
-	.HBlank(HBlank),
-	.VBlank(VBlank),
+	.HBlank(HBlank_r),
+	.VBlank(VBlank_r),
 	.HDMI_FREEZE(HDMI_FREEZE),
 	.freeze_sync(),
 	.VGA_R(VGA_R),
