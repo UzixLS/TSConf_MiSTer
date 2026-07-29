@@ -1,54 +1,149 @@
-# TSConf for MiSTer
+# TSConf for MiSTer FPGA
 
-TSConf is an advanced ZX Spectrum-compatible platform based on ZX Evolution.
-This fork contains the MiSTer port together with the later TSConf RTL fixes and
-features which were developed in the MiST version of the core.
+This is a port of [TSConf](http://forum.tslabs.info/viewforum.php?f=20), an advanced ZX Spectrum-compatible platform, to the [MiSTer FPGA](https://mister-devel.github.io/MkDocs_MiSTer/).
 
 ## Features
 
-- VDAC1 video, MiSTer HDMI/scaler output and 49/60 Hz modes
-- RTC and persistent NVRAM
-- ZiFi (Wi-Fi)
-- tape input, MIDI output and UART through the MiSTer UART pins
-- TurboSound FM (dual YM2203), OPL3 (YMF262, OPL2-compatible), General Sound, SAA1099, Covox and Soundrive
-- two configurable Kempston/Sinclair/Cursor/QAOPM joysticks
-- Kempston mouse with wheel support and optional button swap
-- physical secondary SD card and MiSTer virtual VHD image
+### TSConf features
 
-The TSConf platform provides multiple video modes, tile and sprite planes,
-programmable memory paging, 3.5/7/14 MHz Z80 modes and a DMA controller. See
-the [TSConf documentation](https://github.com/tslabs/zx-evo/blob/master/pentevo/docs/TSconf/tsconf_en.md)
-for the full hardware description.
+- High compatibility with original Pentagon-128 clone
+- Advanced video features:
+  - Pixel resolutions 360x288, 320x240, 320x200, 256x192
+  - Up to 720x288 Hi-res pixel resolution
+  - Hardware scrolled graphic planes
+  - 256 and 16 indexed colors per pixel
+  - Programmable color RAM with RGB555 color space and 256 cells
+  - 512 and 256 bytes per line addressing
+  - Text mode with loadable font and hardware vertical scroll
+  - Up to 256 graphic screens
+- Hardware engine for Tiles and Sprites graphics
+  - Up to 85 sprites per line
+  - Sprites sized from 8x8 to 64x64 pixels
+  - Up to 3 sprite planes
+  - Up to 2 tile planes with 8x8 pixels tiles
+  - Up to 16 palettes for sprites per line
+  - Up to 4 palettes for tiles per line for each tile plane
+- Z80 Memory addressing enhancements:
+  - Programmable RAM page for any 16kB window
+- Z80 acceleration features
+  - Selectable CPU clock 14MHz, 7MHz and 3,5MHz
+  - 512 bytes of zero-wait RAM for 14MHz
+  - On-the-fly programmable maskable interrupt position
+  - Separate IM2 vectors for different interrupt sources
+- Advanced hardware features
+  - DRAM-to-Device, Device-to-DRAM and DRAM-to-DRAM DMA Controller
 
-## Installation
+See details in the official git repository: [link](https://github.com/tslabs/zx-evo/blob/master/pentevo/docs/TSconf/tsconf_en.md)
 
-1. Copy the generated `TSConf.rbf` to the MiSTer `_Computer` directory (a dated
+### Features of the original port
+
+* Scandoubler with HQ2x and Scanlines
+* RTC
+* Configurable CMOS settings through OSD
+* Supports both secondary SD and image on primary SD
+* Kempston Joystick
+* Kempston Mouse
+* Turbosound FM (dual YM2203)
+* General Sound 512KB-2MB
+* SAA1099
+* Covox
+* SounDrive
+* VDAC1
+
+### Features of this fork
+
+* Synced with the newest upstream TSConf version as of July 15, 2026
+* 48.8 Hz and 60 Hz video modes
+* OPL3
+* MIDI output via AY I/O ports
+* UART via ZiFi-compatible ports
+* Improved sound output quality on analog boards without an I2S DAC
+* Two configurable joysticks supporting 8-bit Kempston, Sinclair, Cursor, and QAOPM modes
+* Kempston mouse wheel support
+* Option to swap the Kempston mouse buttons
+* Changed keyboard mapping to match ZX Evolution
+* Improved PS/2 keyboard controller compatibility
+* Two SD cards can be used simultaneously: card #1 is a VHD stored on MiSTer's primary SD card, and card #2 is the physical secondary SD card. Without a mounted VHD, the physical secondary SD card becomes card #1
+* Switchable ABC/ACB PSG panning
+* Tape out mixed into audio output
+* Fixed a video glitch in Demorama
+* Miscellaneous improvements and fixes that even I can no longer remember
+
+
+## Installation and usage
+
+1. Copy `TSConf.rbf` from the GitHub releases page (or from the `release/` directory) to the MiSTer `_Com   er` directory (a dated
    filename such as `TSConf_YYYYMMDD.rbf` may be used).
-2. Copy `release/TSConf.rom` as `games/TSConf/boot0.rom` on the MiSTer SD card.
-3. Copy `release/TSConf.r01` as `games/TSConf/boot1.rom`. MiSTer loads both ROMs
-   automatically when the core starts.
-4. Put a FAT-formatted TSConf VHD image in `games/TSConf` and mount it from the
-   core menu, or use a physical secondary SD card.
+2. Copy `boot.rom` and `boot1.rom` to the `games/TSConf/` directory on the MiSTer SD card.
+3. Put a FAT32-formatted TSConf VHD image to the `games/TSConf` directory and mount it from the
+   core menu, or use a physical secondary SD card formatted in FAT32.
+4. Install [Wild Commander](https://forum.tslabs.info/viewtopic.php?f=26&t=143) on the VHD (or SD card).
+5. Download a few demos and games from https://prods.tslabs.info/
 
-The original TSConf F12 reset key is mapped to F11 because F12 opens the MiSTer
-OSD. Use Left Shift+F11 for BASIC and Right Shift+F11 for the TS-BIOS setup.
-NVRAM can be saved from the OSD and loaded again as an `.NVR` file.
+If everything is done right, Wild Commander will start and let you choose your demos and games to start.
+
+A small example VHD with preinstalled Wild Commander is included in the release.
+
+
+## PS/2 keyboard mapping
+
+Letters `A`–`Z`, digits `0`–`9`, `Enter`, and `Space` map directly to the corresponding ZX Spectrum keys. The remaining mapped PS/2 keys are:
+
+| PS/2 key | ZX Spectrum key or special function |
+|---|---|
+| Left Shift | `Caps Shift` |
+| Right Shift | `Symbol Shift` |
+| Left, Down, Up, Right arrow | `Caps Shift+5`, `Caps Shift+6`, `Caps Shift+7`, `Caps Shift+8` |
+| Backspace | `Caps Shift+0` |
+| Caps Lock | `Caps Shift+2` |
+| Tab | `Caps Shift+Space` (Break) |
+| `` ` `` | `Caps Shift+1` (Edit) |
+| Page Up, Page Down | `Caps Shift+3`, `Caps Shift+4` |
+| Delete | `Caps Shift+9` |
+| Home, End, Insert | `Symbol Shift+Q`, `Symbol Shift+E`, `Symbol Shift+W` |
+| `;` | `Symbol Shift+Z` |
+| `/?` | `Symbol Shift+C` |
+| `'/"` | `Symbol Shift+P` |
+| `-/_` | `Symbol Shift+J` |
+| `=/+` | `Symbol Shift+K` |
+| `[` | `Symbol Shift+8` |
+| `]` | `Symbol Shift+9` |
+| `,` | `Symbol Shift+N` |
+| `.` | `Symbol Shift+M` |
+| `\` | `Caps Shift+Symbol Shift` |
+| `F11` | Reset |
+| `F12` | MiSTer OSD menu |
+| `Left Shift+F11` | CS reset |
+| `Right Shift+F11` | Reset into TS-BIOS Setup Utility |
+
+
+## Joystick buttons mapping
+
+Both joystick ports use the same mapping. Kempston mode exposes the indicated joystick bits directly and does not generate key presses. Sinclair, Cursor, and QAOPM modes convert joystick input to the following keyboard keys.
+
+| Joystick input | Kempston bit | Sinclair 1 | Sinclair 2 | Cursor | QAOPM |
+|---|---:|---:|---:|---|---:|
+| Right | 0 | `7` | `2` | `Right` arrow | `P` |
+| Left | 1 | `6` | `1` | `Left` arrow | `O` |
+| Down | 2 | `8` | `3` | `Down` arrow | `A` |
+| Up | 3 | `9` | `4` | `Up` arrow | `Q` |
+| Fire 1 | 4 | `0` | `5` | `Enter` | `M` |
+| Fire 2 | 5 | `M` | `Z` | `Tab` (`Break`) | `Space` |
+| Fire 3 | 6 | `N` | `X` | `Space` | `N` |
+| Fire 4 | 7 | `B` | `C` | `Esc` (not mapped to the ZX matrix) | `B` |
+
 
 ## Building
 
 The project targets the MiSTer Cyclone V device and Quartus Prime Lite 17.0.
-Quartus is expected in `C:\Hwdev\quartus170`. Build from Cygwin-compatible make:
-
-```text
-C:\cygwin64\bin\make.exe build
-```
-
+Run `make build`, or build the project directly in the Quartus GUI.
 The resulting bitstream is written to `output_files/TSConf.rbf`.
+
 
 ## Credits
 
 - [TSConf / ZX Evolution](https://github.com/tslabs/zx-evo)
-- [original TSConf MiSTer core](https://github.com/MiSTer-devel/TSConf_MiSTer)
+- [Original TSConf MiSTer core](https://github.com/MiSTer-devel/TSConf_MiSTer)
 - T80 Z80 HDL implementation
 - [JT12 Yamaha OPN HDL implementation](https://github.com/jotego/jt12)
 - [OPL3 FPGA implementation from ao486_MiSTer](https://github.com/MiSTer-devel/ao486_MiSTer/tree/master/rtl/soc/sound/opl3)
