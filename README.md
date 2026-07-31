@@ -72,7 +72,7 @@ See details in the official git repository: [link](https://github.com/tslabs/zx-
 
 ## Installation and usage
 
-1. Copy `TSConf.rbf` from the GitHub releases page (or from the `release/` directory) to the MiSTer `_Com   er` directory (a dated
+1. Copy `TSConf.rbf` from the [release](release/) to the MiSTer `_Computer` directory (a dated
    filename such as `TSConf_YYYYMMDD.rbf` may be used).
 2. Copy `boot.rom` and `boot1.rom` to the `games/TSConf/` directory on the MiSTer SD card.
 3. Put a FAT32-formatted TSConf VHD image to the `games/TSConf` directory and mount it from the
@@ -82,7 +82,7 @@ See details in the official git repository: [link](https://github.com/tslabs/zx-
 
 If everything is done right, Wild Commander will start and let you choose your demos and games to start.
 
-A small example VHD with preinstalled Wild Commander is included in the release.
+A small [example](release/) VHD with preinstalled Wild Commander is included in the release.
 
 
 ## PS/2 keyboard mapping
