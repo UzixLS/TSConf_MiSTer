@@ -74,7 +74,7 @@ See details in the official git repository: [link](https://github.com/tslabs/zx-
 
 1. Copy `TSConf.rbf` from the [release](release/) to the MiSTer `_Computer` directory (a dated
    filename such as `TSConf_YYYYMMDD.rbf` may be used).
-2. Copy `boot.rom` and `boot1.rom` to the `games/TSConf/` directory on the MiSTer SD card.
+2. Copy `boot0.rom` and `boot1.rom` to the `games/TSConf/` directory on the MiSTer SD card.
 3. Put a FAT32-formatted TSConf VHD image to the `games/TSConf` directory and mount it from the
    core menu, or use a physical secondary SD card formatted in FAT32.
 4. Install [Wild Commander](https://forum.tslabs.info/viewtopic.php?f=26&t=143) on the VHD (or SD card).
