@@ -103,6 +103,7 @@ localparam CONF_STR = {
 	"P1-;",
 	"P1T7,Apply;",
 	"-;",
+	"O8,GS reset on WIN+G,OFF,ON;",
 	"R0,Reset;",
 	"J,Fire 1,Fire 2,Fire 3,Fire 4;",
 	"jn,A,B,X,Y;",
@@ -423,6 +424,7 @@ tsconf tsconf
 
 	.RESET(RESET | status[0] | buttons[1] | reset_img | ioctl_download | nvram_update_active),
 	.RESET_OUT(reset_out),
+	.RESETGS_ENA(status[8]),
 	.RTC(RTC),
 	.TAPE_IN(UART_RXD),
 	.MIDI_OUT(midi_out),
