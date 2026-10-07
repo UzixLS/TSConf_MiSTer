@@ -26,7 +26,7 @@ This is a port of [TSConf](http://forum.tslabs.info/viewforum.php?f=20), an adva
 - Z80 Memory addressing enhancements:
   - Programmable RAM page for any 16kB window
 - Z80 acceleration features
-  - Selectable CPU clock 14MHz, 7MHz and 3,5MHz
+  - Selectable CPU clock 14MHz, 7MHz and 3.5MHz
   - 512 bytes of zero-wait RAM for 14MHz
   - On-the-fly programmable maskable interrupt position
   - Separate IM2 vectors for different interrupt sources
@@ -35,45 +35,34 @@ This is a port of [TSConf](http://forum.tslabs.info/viewforum.php?f=20), an adva
 
 See details in the official git repository: [link](https://github.com/tslabs/zx-evo/blob/master/pentevo/docs/TSconf/tsconf_en.md)
 
-### Features of the original port
+### MiSTer port features
 
+* Synced with the newest upstream TSConf version as of July 15, 2026
 * Scandoubler with HQ2x and Scanlines
+* 48.8 Hz and 60 Hz video modes
 * RTC
 * Configurable CMOS settings through OSD
-* Supports both secondary SD and image on primary SD
-* Kempston Joystick
-* Kempston Mouse
+* Two SD cards can be used simultaneously: card #1 is a VHD stored on MiSTer's primary SD card, and card #2 is the physical secondary SD card. Without a mounted VHD, the physical secondary SD card becomes card #1
+* Two configurable joysticks supporting 8-bit Kempston, Sinclair, Cursor, and QAOPM modes
+* Kempston mouse with wheel support and an option to swap the buttons
+* Keyboard mapping matching ZX Evolution
+* Improved PS/2 keyboard controller compatibility
 * Turbosound FM (dual YM2203)
 * General Sound 512KB-2MB
 * SAA1099
+* OPL3
 * Covox
 * SounDrive
 * VDAC1
-
-### Features of this fork
-
-* Synced with the newest upstream TSConf version as of July 15, 2026
-* 48.8 Hz and 60 Hz video modes
-* OPL3
-* MIDI output via AY I/O ports
-* UART via ZiFi-compatible ports
-* Improved sound output quality on analog boards without an I2S DAC
-* Two configurable joysticks supporting 8-bit Kempston, Sinclair, Cursor, and QAOPM modes
-* Kempston mouse wheel support
-* Option to swap the Kempston mouse buttons
-* Changed keyboard mapping to match ZX Evolution
-* Improved PS/2 keyboard controller compatibility
-* Two SD cards can be used simultaneously: card #1 is a VHD stored on MiSTer's primary SD card, and card #2 is the physical secondary SD card. Without a mounted VHD, the physical secondary SD card becomes card #1
 * Switchable ABC/ACB PSG panning
 * Tape out mixed into audio output
-* Fixed a video glitch in Demorama
-* Miscellaneous improvements and fixes that even I can no longer remember
+* MIDI output via AY I/O ports
+* [ZiFi](https://github.com/UzixLS/ZiFi) support
 
 
 ## Installation and usage
 
-1. Copy `TSConf.rbf` from the [release](release/) to the MiSTer `_Computer` directory (a dated
-   filename such as `TSConf_YYYYMMDD.rbf` may be used).
+1. Copy `TSConf_YYYYMMDD.rbf` from the [releases](releases/) to the MiSTer `_Computer` directory.
 2. Copy `boot0.rom` and `boot1.rom` to the `games/TSConf/` directory on the MiSTer SD card.
 3. Put a FAT32-formatted TSConf VHD image to the `games/TSConf` directory and mount it from the
    core menu, or use a physical secondary SD card formatted in FAT32.
@@ -82,7 +71,7 @@ See details in the official git repository: [link](https://github.com/tslabs/zx-
 
 If everything is done right, Wild Commander will start and let you choose your demos and games to start.
 
-A small [example](release/) VHD with preinstalled Wild Commander is included in the release.
+A small [example](releases/vhd-example.zip) VHD with preinstalled Wild Commander is included in the release.
 
 
 ## PS/2 keyboard mapping
@@ -143,7 +132,6 @@ The resulting bitstream is written to `output_files/TSConf.rbf`.
 ## Credits
 
 - [TSConf / ZX Evolution](https://github.com/tslabs/zx-evo)
-- [Original TSConf MiSTer core](https://github.com/MiSTer-devel/TSConf_MiSTer)
 - T80 Z80 HDL implementation
 - [JT12 Yamaha OPN HDL implementation](https://github.com/jotego/jt12)
 - [OPL3 FPGA implementation from ao486_MiSTer](https://github.com/MiSTer-devel/ao486_MiSTer/tree/master/rtl/soc/sound/opl3)
