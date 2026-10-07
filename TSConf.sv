@@ -107,6 +107,7 @@ localparam CONF_STR = {
 	"J,Fire 1,Fire 2,Fire 3,Fire 4;",
 	"jn,A,B,X,Y;",
 	"jp,B,A,Y,X;",
+	"v,2;",
 	"V,v",`BUILD_DATE
 };
 
