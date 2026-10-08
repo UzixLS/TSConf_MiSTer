@@ -51,6 +51,7 @@ module tsconf
   // Misc. I/O
   input         RESET,
   output        RESET_OUT,
+  input 			 RESETGS_ENA,
   input  [64:0] RTC,
   input         TAPE_IN,
   output reg    MIDI_OUT = 1'b0,
@@ -1025,6 +1026,7 @@ module tsconf
 
   // PS/2 Keyboard
   wire       key_reset;
+  wire       key_resetgs;
   wire [7:0] key_scancode;
   wire       key_scancode_ack;
   wire       key_scancode_clr;
@@ -1036,6 +1038,7 @@ module tsconf
     .a(a[15:8]),
     .keyb(kbd_port_data),
     .key_reset(key_reset),
+	  .key_resetgs(key_resetgs),
     .scancode(key_scancode),
     .scancode_ack(key_scancode_ack),
     .scancode_clr(key_scancode_clr),
@@ -1211,6 +1214,8 @@ module tsconf
   gs_top gs_top
   (
     .RESET(rst),
+	 .RESETGS(key_resetgs),
+	 .RESETGS_ENA(RESETGS_ENA),
     .CLK(clk),
     .CE(ce),
 

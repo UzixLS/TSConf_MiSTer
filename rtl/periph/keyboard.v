@@ -5,6 +5,7 @@ module keyboard
   input       [7:0] a,
   output      [4:0] keyb,
   output reg        key_reset,
+  output reg        key_resetgs,
   output reg  [7:0] scancode,
   input             scancode_ack,
   input             scancode_clr,
@@ -208,6 +209,7 @@ end
 
 always @* begin
   key_reset  <= ~c['h78];
+  key_resetgs <= strobe && press && (code[7:0] == 8'h34) && (!c['h1f] || !c['h27]);    //Win + G
 
   keys[0][0] <= c['h12]&c['h6b]&c['h72]&c['h75]&c['h74]&c['h66]&c['h58]&c['h0d]&c['h0e]&c['h7d]&c['h7a]&c['h71]&c['h5d]; // CAPS SHIFT <= Lshift & Left & Down & Up & Right & Backspace & Caps & Tab & ` & PgUp & PgDn & Del & \
   keys[0][1] <= c['h1a]&c['h4c];         // Z & ;

@@ -1,6 +1,8 @@
 module gs_top
 (
    input         RESET,
+	input         RESETGS,
+	input         RESETGS_ENA,
    input         CLK,
    input         CE,
 
@@ -90,7 +92,11 @@ module gs_top
 
   reg reset;
   always @(posedge CLK)
-    reset <= RESET || !rom_inited;
+	if (!rom_inited || !RESETGS_ENA)
+		reset <= RESET;
+	else
+		reset <= RESETGS;
+
 
   // CE comes from a falling-edge divider and otherwise has only half a CLK
   // period to reach the high-fanout CPU enable network. Register it locally so
