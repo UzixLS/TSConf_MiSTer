@@ -104,7 +104,8 @@ always @(posedge CLK) begin
       8'h08 : month_reg         <= DI;
       8'h09 : year_reg          <= DI;
       8'h0b : begin
-        b_reg <= DI;
+        // https://github.com/tslabs/zx-evo/blob/aa260162304639adb2bb16ae79755630af77d798/pentevo/avr/current/rtc.c#L376
+        b_reg <= DI | 8'h02;
         if (b_reg[2] == 1'b0) begin  // BCD to BIN convertion
           if (DI[4] == 1'b0) leap_reg <= DI[1:0];
           else leap_reg <= {~DI[1], DI[0]};
